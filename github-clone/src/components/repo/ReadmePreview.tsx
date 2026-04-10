@@ -16,7 +16,7 @@ export function ReadmePreview({ repoName }: ReadmePreviewProps) {
           {repoName}
         </h1>
         <p className="text-sm text-gh-fg mb-4">
-          A GitHub UI clone built with Next.js and Tailwind CSS that demonstrates UX improvements
+          A web app built with Next.js and Tailwind CSS that demonstrates UX improvements
           identified through user research with computer science students and junior developers.
         </p>
 

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
+import { FavoritesProvider } from "@/context/FavoritesContext";
+import { VisibilityProvider } from "@/context/VisibilityContext";
 
 export const metadata: Metadata = {
-  title: "GitHub UX Improved",
-  description: "GitHub clone with UX improvements - Proyecto Interfaces",
+  title: "DevHub",
+  description: "Proyecto Interfaces - UX Improvements",
 };
 
 export default function RootLayout({
@@ -15,10 +17,14 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-6">
-          {children}
-        </main>
+        <FavoritesProvider>
+        <VisibilityProvider>
+          <Navbar />
+          <main className="max-w-7xl mx-auto px-4 py-6">
+            {children}
+          </main>
+        </VisibilityProvider>
+        </FavoritesProvider>
       </body>
     </html>
   );

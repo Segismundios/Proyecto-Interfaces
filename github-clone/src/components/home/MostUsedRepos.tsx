@@ -1,13 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import { Clock, Star, Lock, Globe } from "lucide-react";
 import { Repository } from "@/types";
 import { timeAgo } from "@/lib/utils";
+import { useFavorites } from "@/context/FavoritesContext";
+import { useVisibility } from "@/context/VisibilityContext";
 
 interface MostUsedReposProps {
   repos: Repository[];
 }
 
 export function MostUsedRepos({ repos }: MostUsedReposProps) {
+  const { isFavorite } = useFavorites();
+  const { getVisibility } = useVisibility();
   const sorted = [...repos]
     .sort((a, b) => new Date(b.lastAccessed).getTime() - new Date(a.lastAccessed).getTime())
     .slice(0, 5);
@@ -28,7 +34,7 @@ export function MostUsedRepos({ repos }: MostUsedReposProps) {
           >
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1 text-xs text-gh-fg-muted">
-                {repo.visibility === "private" ? <Lock className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                {getVisibility(repo.owner, repo.name) === "private" ? <Lock className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
               </span>
               <div>
                 <Link
@@ -46,7 +52,7 @@ export function MostUsedRepos({ repos }: MostUsedReposProps) {
                 {repo.language}
               </span>
               <span className="flex items-center gap-1">
-                <Star className="w-3 h-3" /> {repo.stars}
+                <Star className="w-3 h-3" /> {repo.stars - (repo.isFavorite ? 1 : 0) + (isFavorite(repo.owner, repo.name) ? 1 : 0)}
               </span>
               <span>Last used {timeAgo(repo.lastAccessed)}</span>
             </div>

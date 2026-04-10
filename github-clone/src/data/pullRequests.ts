@@ -48,6 +48,7 @@ export const pullRequests: PullRequest[] = [
         filename: "src/app/settings/layout.tsx",
         additions: 45,
         deletions: 0,
+        reviewedBy: ["maria-garcia"],
         hunks: [
           {
             header: "@@ -0,0 +1,45 @@",
@@ -74,6 +75,7 @@ export const pullRequests: PullRequest[] = [
         filename: "src/app/settings/tokens/page.tsx",
         additions: 38,
         deletions: 0,
+        reviewedBy: ["maria-garcia", "carlos-ruiz"],
         hunks: [
           {
             header: "@@ -0,0 +1,38 @@",
@@ -95,6 +97,7 @@ export const pullRequests: PullRequest[] = [
         filename: "src/components/settings/SettingsSidebar.tsx",
         additions: 52,
         deletions: 0,
+        reviewedBy: [],
         hunks: [
           {
             header: "@@ -0,0 +1,52 @@",
@@ -112,6 +115,7 @@ export const pullRequests: PullRequest[] = [
         filename: "src/components/layout/Navbar.tsx",
         additions: 8,
         deletions: 3,
+        reviewedBy: ["carlos-ruiz"],
         hunks: [
           {
             header: "@@ -15,8 +15,13 @@",

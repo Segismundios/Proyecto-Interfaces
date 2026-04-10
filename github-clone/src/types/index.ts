@@ -61,6 +61,7 @@ export interface DiffFile {
   additions: number;
   deletions: number;
   hunks: DiffHunk[];
+  reviewedBy?: string[];
 }
 
 export interface DiffHunk {

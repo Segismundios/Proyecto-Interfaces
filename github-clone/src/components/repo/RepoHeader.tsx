@@ -6,18 +6,22 @@ import { Star, GitFork, Eye, Lock, Globe, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
+import { useFavorites } from "@/context/FavoritesContext";
+import { useVisibility } from "@/context/VisibilityContext";
 
 interface RepoHeaderProps {
   repo: Repository;
 }
 
 export function RepoHeader({ repo }: RepoHeaderProps) {
-  const [visibility, setVisibility] = useState(repo.visibility);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [starred, setStarred] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { getVisibility, toggleVisibility: ctxToggle } = useVisibility();
+  const starred = isFavorite(repo.owner, repo.name);
+  const visibility = getVisibility(repo.owner, repo.name);
 
   const toggleVisibility = () => {
-    setVisibility(visibility === "public" ? "private" : "public");
+    ctxToggle(repo.owner, repo.name);
     setShowConfirm(false);
   };
 
@@ -52,10 +56,10 @@ export function RepoHeader({ repo }: RepoHeaderProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => setStarred(!starred)}>
+            <Button size="sm" onClick={() => toggleFavorite(repo.owner, repo.name)}>
               <Star className={`w-3.5 h-3.5 ${starred ? "fill-gh-warning text-gh-warning" : ""}`} />
               {starred ? "Starred" : "Star"}
-              <span className="border-l border-gh-border pl-2 ml-1">{repo.stars + (starred ? 1 : 0)}</span>
+              <span className="border-l border-gh-border pl-2 ml-1">{repo.stars - (repo.isFavorite ? 1 : 0) + (starred ? 1 : 0)}</span>
             </Button>
             <Button size="sm">
               <GitFork className="w-3.5 h-3.5" />

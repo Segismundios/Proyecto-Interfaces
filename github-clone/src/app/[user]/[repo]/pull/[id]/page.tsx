@@ -30,9 +30,30 @@ export default function PullRequestPage() {
   const userName = params.user as string;
   const [activeTab, setActiveTab] = useState("conversation");
 
-  const pr = pullRequests.find(
+  const prData = pullRequests.find(
     (p) => p.id === prId && p.repoName === repoName && p.repoOwner === userName
   );
+
+  const [fileReviews, setFileReviews] = useState<Record<string, string[]>>(
+    () => Object.fromEntries(
+      (prData?.diffFiles ?? []).map((f) => [f.filename, f.reviewedBy ?? []])
+    )
+  );
+
+  function toggleFileReview(filename: string) {
+    setFileReviews((prev) => {
+      const current = prev[filename] ?? [];
+      const hasReview = current.includes(currentUser.username);
+      return {
+        ...prev,
+        [filename]: hasReview
+          ? current.filter((u) => u !== currentUser.username)
+          : [...current, currentUser.username],
+      };
+    });
+  }
+
+  const pr = prData;
 
   if (!pr) {
     return (
@@ -139,14 +160,25 @@ export default function PullRequestPage() {
 
             {activeTab === "commits" && <CommitList commits={pr.commits} />}
 
-            {activeTab === "files" && <DiffViewer files={pr.diffFiles} />}
+            {activeTab === "files" && (
+              <DiffViewer
+                files={pr.diffFiles}
+                reviewers={pr.reviewers}
+                fileReviews={fileReviews}
+                onToggleFileReview={toggleFileReview}
+              />
+            )}
           </div>
         </div>
 
         {/* Sidebar */}
         <aside className="w-72 shrink-0 space-y-4">
           {/* MEJORA 5: Review Progress */}
-          <ReviewProgressBar reviewers={pr.reviewers} />
+          <ReviewProgressBar
+            reviewers={pr.reviewers}
+            files={pr.diffFiles}
+            fileReviews={fileReviews}
+          />
 
           {/* Labels */}
           <div className="border border-gh-border rounded-md p-3">

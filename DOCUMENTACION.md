@@ -106,9 +106,11 @@ github-clone/
 │   │   │   ├── layout.tsx           # Layout de settings (sidebar)
 │   │   │   ├── page.tsx             # "/settings" - Perfil
 │   │   │   ├── tokens/
-│   │   │   │   └── page.tsx         # "/settings/tokens"
+│   │   │   │   └── page.tsx         # "/settings/tokens" (protegido por SecurityGate)
 │   │   │   └── ssh-keys/
-│   │   │       └── page.tsx         # "/settings/ssh-keys"
+│   │   │       └── page.tsx         # "/settings/ssh-keys" (protegido por SecurityGate)
+│   │   ├── explore/
+│   │   │   └── page.tsx             # "/explore" - Trending y tus repos
 │   │   └── [user]/[repo]/
 │   │       ├── page.tsx             # "/:user/:repo" - Vista de repo
 │   │       └── pull/[id]/
@@ -119,7 +121,9 @@ github-clone/
 │   │   │   ├── Badge.tsx
 │   │   │   ├── Button.tsx
 │   │   │   ├── Card.tsx
+│   │   │   ├── EmptyState.tsx
 │   │   │   ├── Modal.tsx
+│   │   │   ├── SecurityGate.tsx     # Gate de ruta para credenciales sensibles
 │   │   │   ├── Tabs.tsx
 │   │   │   └── Toggle.tsx
 │   │   ├── layout/                  # Componentes de layout global
@@ -141,6 +145,10 @@ github-clone/
 │   │       ├── DiffViewer.tsx
 │   │       ├── PRTimeline.tsx
 │   │       └── CommitList.tsx
+│   ├── context/                     # Providers de estado global (localStorage)
+│   │   ├── FavoritesContext.tsx     # Repos marcados como favoritos
+│   │   ├── VisibilityContext.tsx    # Overrides de visibilidad por repo
+│   │   └── SecurityContext.tsx      # Verificacion de password con TTL 30 min
 │   ├── data/                        # Datos mock (hardcodeados)
 │   │   ├── users.ts
 │   │   ├── repos.ts
@@ -162,6 +170,7 @@ github-clone/
 
 - **`app/`**: Cada archivo `page.tsx` define una ruta. Los directorios con `[nombre]` son rutas dinamicas.
 - **`components/`**: Organizados por dominio funcional (`ui/`, `home/`, `settings/`, `repo/`, `pr/`).
+- **`context/`**: Providers de React Context para estado global ligero. Toda la persistencia ocurre en `localStorage` (no sessionStorage, no backend).
 - **`data/`**: Cada archivo exporta constantes con datos mock tipados.
 - **`types/`**: Archivo unico con todas las interfaces compartidas.
 - **`lib/`**: Utilidades puras sin dependencias de React.
@@ -581,8 +590,44 @@ El tab activo muestra un borde inferior azul (`border-gh-accent`). Los contadore
 | `checked` | `boolean` | Estado actual |
 | `onChange` | `(checked: boolean) => void` | Callback al cambiar |
 | `label` | `string?` | Texto opcional junto al toggle |
+| `disabled` | `boolean?` | Si esta deshabilitado |
 
-Disponible en el proyecto aunque actualmente no se usa directamente (la Mejora 3 usa un Button + Modal en lugar de un toggle simple por seguridad).
+Implementa `role="switch"` con `aria-checked`, focus ring, y estado disabled. Disponible en el proyecto aunque actualmente no se usa directamente (la Mejora 3 usa un Button + Modal en lugar de un toggle simple por seguridad).
+
+### 8.8 EmptyState (`EmptyState.tsx`)
+
+**Componente servidor**. Estado vacio reutilizable con icono + titulo + descripcion + CTA opcional.
+
+| Prop | Tipo | Descripcion |
+|------|------|-------------|
+| `icon` | `LucideIcon` | Componente de icono Lucide |
+| `title` | `string` | Titulo breve |
+| `description` | `string?` | Texto secundario |
+| `cta` | `ReactNode?` | Boton o elemento de accion |
+| `size` | `"sm" \| "md"` | Tamaño (default `md`) |
+
+**Usado en:** FavoriteRepos (sin favoritos), RecentActivity (sin actividad), TokensPage (sin tokens), SSHKeysPage (sin keys).
+
+### 8.9 SecurityGate (`SecurityGate.tsx`)
+
+**Componente cliente**. Gate de proteccion a nivel de pagina: bloquea el contenido sensible hasta que el usuario confirme su contraseña, **incluso si llega por URL directa** o bookmark.
+
+| Prop | Tipo | Descripcion |
+|------|------|-------------|
+| `children` | `ReactNode` | Contenido protegido |
+| `title` | `string?` | Titulo del modal (default `"Confirm access"`) |
+| `description` | `string?` | Texto explicativo del modal |
+
+**Como funciona:**
+
+1. Consume `useSecurity()` para leer `isVerified` (TTL global gestionado por `SecurityContext`).
+2. Si `isVerified === true`: muestra un badge verde `ShieldCheck · Sesion verificada · expira en N min` arriba del contenido, y renderiza `children`.
+3. Si `isVerified === false`: renderiza el contenido en `opacity-20 blur-sm pointer-events-none` (preview "borroso" para mantener contexto) + un overlay modal `role="dialog" aria-modal="true"` con input de password, loading state (`Loader2 animate-spin`), error state (mensaje rojo con `role="alert"`), y boton de confirmacion.
+4. Al verificar, llama a `verify(password)` del contexto. Si retorna `true`, el componente re-renderiza con `children` visibles (sin recargar la pagina).
+
+**Usado en:** `app/settings/tokens/page.tsx` (titulo: *"Access Tokens protegidos"*), `app/settings/ssh-keys/page.tsx` (titulo: *"SSH Keys protegidas"*).
+
+**Mock:** cualquier contraseña no vacia es valida (no hay backend). En produccion, `verify()` haria una llamada al servidor de auth.
 
 ---
 
@@ -646,25 +691,30 @@ Layout anidado para las paginas de configuracion. Agrega un sidebar a la izquier
 
 ### 9.4 SettingsSidebar (`src/components/settings/SettingsSidebar.tsx`)
 
-**Componente cliente** (usa `usePathname()`).
+**Componente cliente** (usa `usePathname()`, consume `SecurityContext`).
 
 Sidebar de navegacion para las paginas de settings. Implementa la **Mejora 2** al poner Tokens y SSH Keys como items prominentes.
 
 **Items del menu:**
 
-| Label | Icono | Ruta | Destacado |
-|-------|-------|------|-----------|
-| Profile | `User` | `/settings` | No |
-| Access Tokens | `Key` | `/settings/tokens` | Si (badge "Quick", color azul) |
-| SSH Keys | `Shield` | `/settings/ssh-keys` | Si (badge "Quick", color azul) |
-| Appearance | `Paintbrush` | `#` | No (placeholder) |
-| Accessibility | `Eye` | `#` | No (placeholder) |
-| Notifications | `Bell` | `#` | No (placeholder) |
+| Label | Icono | Ruta | Destacado | Protegido |
+|-------|-------|------|-----------|-----------|
+| Profile | `User` | `/settings` | No | No |
+| Access Tokens | `Key` | `/settings/tokens` | Si (badge "Quick", color azul) | Si |
+| SSH Keys | `Shield` | `/settings/ssh-keys` | Si (badge "Quick", color azul) | Si |
+
+Las entradas placeholder (`Appearance`, `Accessibility`, `Notifications`) fueron removidas para cumplir el requisito "navegable de punta a punta sin callejones sin salida".
+
+**Comportamiento de los items protegidos:**
+
+1. Si `useSecurity().isVerified === false`: al hacer click se abre un `Modal` que pide la contraseña. Al verificar correctamente (cualquier contraseña no vacia es valida en el mock) se llama a `verify()` del contexto, que setea `verifiedUntil = Date.now() + 30 min` en `localStorage`, y se navega a la ruta.
+2. Si `useSecurity().isVerified === true`: el modal se salta y se navega directo. Un badge verde `ShieldCheck · Verificado · N min` aparece en el sidebar indicando cuanto tiempo queda de sesion verificada.
+3. **Importante:** la verificacion tambien se aplica si el usuario llega por URL directa (`http://localhost:3000/settings/tokens`); el `SecurityGate` (seccion 8.8) bloquea el contenido de la pagina.
 
 **Elementos especiales:**
 - Los items destacados tienen texto azul (`text-gh-accent`) cuando no estan activos y un badge "Quick"
-- El item activo tiene fondo `gh-btn-bg` y texto blanco
-- Al final del sidebar hay un callout azul explicando la mejora UX
+- El item activo tiene fondo `gh-btn-bg`, texto blanco, y un border lateral azul de 2px
+- `<aside>` callout explica la decision de diseño: *"Frecuencia sobre completitud"*
 
 ---
 
@@ -771,10 +821,21 @@ En GitHub real, los Personal Access Tokens estan en Settings > Developer Setting
   - **Access Tokens**: Icono Key, descripcion, conteo de tokens activos (verde), link a `/settings/tokens`
   - **SSH Keys**: Icono Shield, descripcion, conteo de keys, link a `/settings/ssh-keys`
 
+### Proteccion de rutas sensibles: SecurityGate
+
+Las rutas `/settings/tokens` y `/settings/ssh-keys` estan **envueltas en `<SecurityGate>`** (ver seccion 8.9). El gate consulta `SecurityContext` para determinar si la sesion esta verificada:
+
+- **Por URL directa** (`http://localhost:3000/settings/tokens` en una pestaña nueva, bookmark, link compartido): el contenido se renderiza borroso (`opacity-20 blur-sm`) y aparece un modal pidiendo contraseña.
+- **Por click desde el sidebar**: si ya hay sesion verificada, el sidebar salta el prompt y navega directo. Si no, abre su propio modal de password (con la misma logica) antes de navegar.
+- **TTL de la verificacion**: 30 minutos, persistido en `localStorage` (clave `gh-security-verified-until` con timestamp epoch ms). Un `setInterval` de 5s en `SecurityContext` re-valida `Date.now() > verifiedUntil` para invalidar automaticamente.
+
+El mock acepta cualquier contraseña no vacia (es UX puro; no hay backend de auth).
+
 ### Pagina de Tokens (`/settings/tokens`)
 
 **Archivo:** `src/app/settings/tokens/page.tsx`
 **Tipo:** Client Component (`"use client"`)
+**Proteccion:** envuelta en `<SecurityGate title="Access Tokens protegidos" description="..." >`.
 
 **Estado local:**
 
@@ -784,18 +845,23 @@ En GitHub real, los Personal Access Tokens estan en Settings > Developer Setting
 | `showModal` | `boolean` | `false` | Visibilidad del modal de creacion |
 | `newTokenName` | `string` | `""` | Input del nombre del nuevo token |
 | `selectedScopes` | `string[]` | `[]` | Scopes seleccionados |
+| `error` | `string \| null` | `null` | Mensaje de validacion inline |
+| `submitting` | `boolean` | `false` | Loading state durante creacion |
+| `copied` | `string \| null` | `null` | Id del token cuyo preview se copio recientemente |
 
 **Funcionalidades:**
-- **Ver tokens**: Lista con nombre, preview enmascarado, badges de scopes, fechas de creacion/expiracion, boton copiar
-- **Crear token**: Modal con input de nombre + checkboxes de 6 scopes disponibles (`repo`, `workflow`, `write:packages`, `read:org`, `gist`, `admin:repo_hook`) + botones Cancel/Generate
+- **Ver tokens**: Lista con nombre, preview enmascarado, badges de scopes, fechas de creacion/expiracion, boton copiar (con feedback `Check` por 1.5s)
+- **Crear token**: Modal con validacion inline (nombre obligatorio, formato `[a-zA-Z0-9._-]+`, scopes minimo 1, no duplicados), loading state simulado (`setTimeout 800ms`) y `Loader2 animate-spin` en el boton
 - **Eliminar token**: Boton rojo (Trash2) que filtra el token del estado
+- **Empty state**: si la lista esta vacia, muestra `<EmptyState>` con CTA "Generate your first token"
 
-**Componentes usados:** Button, Badge, Modal, Key/Trash2/Plus/Copy (iconos).
+**Componentes usados:** Button, Badge, Modal, EmptyState, SecurityGate, Key/Trash2/Plus/Copy/Loader2/Check (iconos).
 
 ### Pagina de SSH Keys (`/settings/ssh-keys`)
 
 **Archivo:** `src/app/settings/ssh-keys/page.tsx`
 **Tipo:** Client Component (`"use client"`)
+**Proteccion:** envuelta en `<SecurityGate title="SSH Keys protegidas" description="..." >`.
 
 **Estado local:**
 
@@ -805,11 +871,14 @@ En GitHub real, los Personal Access Tokens estan en Settings > Developer Setting
 | `showModal` | `boolean` | `false` | Visibilidad del modal |
 | `newTitle` | `string` | `""` | Titulo de la nueva key |
 | `newKey` | `string` | `""` | Clave publica (textarea) |
+| `error` | `string \| null` | `null` | Mensaje de validacion inline |
+| `submitting` | `boolean` | `false` | Loading state durante creacion |
 
 **Funcionalidades:**
 - **Ver keys**: Lista con titulo, fingerprint SHA256, fechas, boton eliminar
-- **Agregar key**: Modal con input de titulo + textarea para pegar la clave publica
+- **Agregar key**: Modal con validacion (titulo obligatorio, clave debe empezar con uno de `ssh-rsa`, `ssh-ed25519`, `ssh-dss`, `ecdsa-sha2-nistp{256,384,521}`) + loading state (`Loader2 animate-spin`)
 - **Eliminar key**: Boton rojo que filtra la key del estado
+- **Empty state**: si no hay keys, muestra `<EmptyState>` con CTA "Add your first SSH key"
 
 ### Flujo de datos
 
@@ -1156,6 +1225,12 @@ data/users.ts ──→ getUserAvatar() en ReviewProgressBar, PRTimeline, Commit
     │ Componentes de dominio                   │
     │ (home/, settings/, repo/, pr/, layout/)  │
     └──────────────────┬──────────────────────┘
+                       │ consume / propaga state
+                       ▼
+              ┌─────────────────┐         ┌──────────────────┐
+              │ context/        │◄────────│ localStorage     │
+              │ providers       │         │ (browser API)    │
+              └────────┬────────┘         └──────────────────┘
                        │
                        ▼
               ┌─────────────────┐
@@ -1167,9 +1242,9 @@ data/users.ts ──→ getUserAvatar() en ReviewProgressBar, PRTimeline, Commit
 ### Patron de datos
 
 1. **Datos estaticos** (`data/*.ts`) → importados directamente por paginas
-2. **Estado mutable** → `useState` a nivel de pagina o componente, inicializado desde datos estaticos
-3. **Props drilling** → las paginas pasan datos a sus componentes hijos via props
-4. **Sin estado global** → no hay Context API, Redux ni Zustand. Cada pagina es independiente
+2. **Estado mutable local** → `useState` a nivel de pagina o componente, inicializado desde datos estaticos (formularios, modales, tabs activos)
+3. **Estado global** → `Context API` (`FavoritesContext`, `VisibilityContext`, `SecurityContext`) persistido en `localStorage`
+4. **Props drilling** → las paginas pasan datos a sus componentes hijos via props para todo lo que no es estado global
 
 ### Relacion componentes UI ← Componentes de dominio
 
@@ -1177,9 +1252,11 @@ data/users.ts ──→ getUserAvatar() en ReviewProgressBar, PRTimeline, Commit
 |---------------|-----------|
 | `Avatar` | Navbar, Home sidebar, Settings, PRTimeline, CommitList, ReviewProgressBar, PR header |
 | `Badge` | RecentActivity, RepoHeader, Repo PR list, PR page, Token scopes, PR labels |
-| `Button` | Settings (crear/eliminar), RepoHeader (star/fork/visibility), FileBrowser, PR page (merge), Modals |
+| `Button` | Settings (crear/eliminar), RepoHeader (star/fork/visibility), FileBrowser, PR page (merge), Modals, QuickActions |
 | `Card` | FavoriteRepos, Settings overview |
-| `Modal` | Tokens (crear), SSH Keys (agregar), RepoHeader (confirmar visibilidad) |
+| `EmptyState` | FavoriteRepos, RecentActivity, TokensPage, SSHKeysPage, FileBrowser (carpeta vacia) |
+| `Modal` | Tokens (crear), SSH Keys (agregar), RepoHeader (confirmar visibilidad), QuickActions (New Repo / New PR), SettingsSidebar (password) |
+| `SecurityGate` | TokensPage, SSHKeysPage |
 | `Tabs` | Repo page, PR page |
 | `Toggle` | Disponible pero no usado directamente (el toggle de visibilidad usa Button + Modal) |
 
@@ -1187,14 +1264,17 @@ data/users.ts ──→ getUserAvatar() en ReviewProgressBar, PRTimeline, Commit
 
 ## 15. Rutas de la Aplicacion
 
-| Ruta | Archivo | Tipo | Descripcion |
-|------|---------|------|-------------|
-| `/` | `app/page.tsx` | Server | Home Dashboard (Mejora 1) |
-| `/settings` | `app/settings/page.tsx` | Server | Perfil + acceso rapido a tokens/keys |
-| `/settings/tokens` | `app/settings/tokens/page.tsx` | Client | Gestion de tokens (Mejora 2) |
-| `/settings/ssh-keys` | `app/settings/ssh-keys/page.tsx` | Client | Gestion de SSH keys (Mejora 2) |
-| `/:user/:repo` | `app/[user]/[repo]/page.tsx` | Client | Vista de repositorio (Mejoras 3, 4) |
-| `/:user/:repo/pull/:id` | `app/[user]/[repo]/pull/[id]/page.tsx` | Client | Vista de PR (Mejora 5) |
+| Ruta | Archivo | Tipo | Protegida | Descripcion |
+|------|---------|------|-----------|-------------|
+| `/` | `app/page.tsx` | Server | — | Home Dashboard (Mejora 1) |
+| `/explore` | `app/explore/page.tsx` | Server | — | Trending y tus repositorios |
+| `/settings` | `app/settings/page.tsx` | Server | — | Perfil + acceso rapido a tokens/keys |
+| `/settings/tokens` | `app/settings/tokens/page.tsx` | Client | **Si** (SecurityGate) | Gestion de tokens (Mejora 2) |
+| `/settings/ssh-keys` | `app/settings/ssh-keys/page.tsx` | Client | **Si** (SecurityGate) | Gestion de SSH keys (Mejora 2) |
+| `/:user/:repo` | `app/[user]/[repo]/page.tsx` | Client | — | Vista de repositorio (Mejoras 3, 4) |
+| `/:user/:repo/pull/:id` | `app/[user]/[repo]/pull/[id]/page.tsx` | Client | — | Vista de PR (Mejora 5) |
+
+Las rutas marcadas como **protegidas** requieren confirmacion de password (modal del `SecurityGate`) tanto si se accede por click desde el sidebar como por URL directa. La verificacion dura 30 minutos via `SecurityContext` (ver seccion 16).
 
 ### Rutas con datos mock disponibles
 
@@ -1221,8 +1301,9 @@ Se implemento unicamente el tema oscuro de GitHub. Razones:
 ### Frontend-only con datos hardcodeados
 
 - No hay backend, base de datos ni llamadas a APIs
-- Los datos se importan directamente como constantes TypeScript
-- Las modificaciones (crear token, cambiar visibilidad) usan `useState` y solo persisten durante la sesion del navegador
+- Los datos iniciales se importan directamente como constantes TypeScript desde `src/data/`
+- Las modificaciones efimeras (crear token, agregar SSH key) usan `useState` local y se pierden al recargar; las modificaciones globales (marcar favoritos, cambiar visibilidad de un repo, verificar sesion) se persisten en `localStorage` via Context (ver seccion siguiente)
+- Las acciones que en produccion irian a un servidor se simulan con `setTimeout` para mostrar transiciones loading → success en la UI
 
 ### App Router de Next.js
 
@@ -1247,6 +1328,20 @@ Se eligio `lucide-react` sobre `@primer/octicons-react` (los iconos oficiales de
 
 El `ReadmePreview` usa HTML hardcodeado con clases de Tailwind en lugar de un parser como `react-markdown`. Para un prototipo, agregar una dependencia extra para parsear Markdown no agrega valor demostrativo.
 
-### Sin persistencia entre navegaciones
+### Estado global con Context + localStorage
 
-El estado creado con `useState` (tokens nuevos, cambios de visibilidad, etc.) se pierde al navegar a otra pagina. Esto es aceptable para un prototipo de demostracion. Si se quisiera persistencia, se podria agregar `localStorage` o un Context global.
+El proyecto usa **tres React Contexts** (en `src/context/`) para estado que necesita sobrevivir navegacion. Toda la persistencia es en `localStorage` (no sessionStorage, no backend). Los providers se anidan en `src/app/layout.tsx`.
+
+| Context | Clave localStorage | Persiste | Consumido por |
+|---------|--------------------|----------|---------------|
+| `FavoritesContext` | `gh-favorites` | Set de `"owner/name"` | `FavoriteRepos`, `MostUsedRepos`, `RepoHeader` |
+| `VisibilityContext` | `gh-visibility` | Map de visibilidad por repo | `FavoriteRepos`, `MostUsedRepos`, `RepoHeader` |
+| `SecurityContext` | `gh-security-verified-until` | Timestamp epoch ms hasta cuando dura la sesion verificada (TTL 30 min) | `SecurityGate`, `SettingsSidebar` |
+
+Justificacion: el estado global es minimo (3 contextos pequeños), por lo que **no introdujimos Redux ni Zustand**. Context API es suficiente y no agrega dependencias.
+
+**Por que `localStorage` y no `sessionStorage`:** queremos que los favoritos y la visibilidad sobrevivan al cierre del navegador. Para la verificacion de seguridad, `localStorage` se combina con un timestamp TTL (30 min) que el contexto re-evalua cada 5s, replicando el comportamiento "sudo" de GitHub real (verificas una vez y dura un rato, no toda la vida).
+
+### Proteccion de rutas sin backend
+
+Las rutas que muestran credenciales (`/settings/tokens`, `/settings/ssh-keys`) estan envueltas en `<SecurityGate>` (`src/components/ui/SecurityGate.tsx`). Esto impide que un usuario acceda al contenido por URL directa o bookmark sin pasar por el modal de password. El gate consume `SecurityContext`, por lo que **la verificacion realizada desde el sidebar tambien aplica al gate de ruta** (y viceversa).

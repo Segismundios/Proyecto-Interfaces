@@ -1,13 +1,15 @@
+// Client component: usa localStorage (browser API) y mantiene state reactivo
+// para que cualquier consumidor (Star button, FavoriteRepos) reaccione al toggle.
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { repositories } from "@/data/repos";
 
-const SESSION_KEY = "gh-favorites";
+const STORAGE_KEY = "gh-favorites";
 
 function loadFromSession(): Set<string> {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return new Set(JSON.parse(raw));
   } catch {}
   // Fallback: initialize from mock data
@@ -27,7 +29,7 @@ const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
-  // Load from sessionStorage on mount (client only)
+  // Load from localStorage on mount (client only)
   useEffect(() => {
     setFavorites(loadFromSession());
   }, []);
@@ -42,7 +44,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         next.add(key);
       }
       try {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(Array.from(next)));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next)));
       } catch {}
       return next;
     });

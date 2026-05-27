@@ -1,6 +1,6 @@
 import { Reviewer, DiffFile } from "@/types";
 import { collaborators, currentUser } from "@/data/users";
-import { Check, X, Clock, MessageCircle } from "lucide-react";
+import { Check, X, Clock, MessageCircle, Info } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 
 interface ReviewProgressBarProps {
@@ -136,11 +136,14 @@ export function ReviewProgressBar({ reviewers, files, fileReviews }: ReviewProgr
         </div>
       )}
 
-      {/* UX callout */}
-      <div className="mt-3 pt-3 border-t border-gh-border">
-        <span className="text-[10px] text-gh-accent bg-gh-accent/10 px-2 py-0.5 rounded-full">
-          UX Improvement: Review progress visible to all reviewers
-        </span>
+      {/* Reframe callout */}
+      <div className="mt-4 pt-3 border-t border-gh-border flex items-start gap-2 text-xs text-gh-fg-muted">
+        <Info className="w-3.5 h-3.5 text-gh-accent shrink-0 mt-0.5" />
+        <p className="leading-relaxed">
+          <span className="font-semibold text-gh-accent">Proceso visible:</span> el progreso de
+          revisión está visible para todos. En GitHub clásico, cada reviewer ve sólo su propio
+          estado y hay que abrir el menú &quot;Reviewers&quot; para saber dónde va el proceso.
+        </p>
       </div>
     </div>
   );

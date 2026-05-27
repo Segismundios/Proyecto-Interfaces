@@ -1,15 +1,17 @@
+// Client component: persiste cambios de visibilidad del repo en localStorage
+// para que el toggle del header sobreviva navegación entre rutas.
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { repositories } from "@/data/repos";
 
-const SESSION_KEY = "gh-visibility";
+const STORAGE_KEY = "gh-visibility";
 
 type VisibilityMap = Record<string, "public" | "private">;
 
 function loadFromSession(): VisibilityMap {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
   return Object.fromEntries(
@@ -42,7 +44,7 @@ export function VisibilityProvider({ children }: { children: ReactNode }) {
     setMap((prev) => {
       const current = prev[key] ?? getVisibility(owner, name);
       const next = { ...prev, [key]: current === "public" ? "private" : "public" } as VisibilityMap;
-      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(next)); } catch {}
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
       return next;
     });
   }

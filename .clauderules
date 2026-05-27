@@ -1,0 +1,273 @@
+# Claude Rules — IIC2182 Proyecto Interfaces
+
+> ⚠️ REQUERIMIENTOS DE CLASES (Clase7–Clase14, IIC2182 INTERFACES)
+> Las reglas de esta sección son **requisitos estrictos del curso** extraídos directamente
+> de las clases de UI/UX y React avanzado. Toda edición de código DEBE respetar estas reglas.
+
+---
+
+## 1. JERARQUÍA VISUAL (Clase 7)
+
+- **Nunca** usar solo tamaño de fuente para establecer jerarquía visual — conduce a problemas de proporción.
+- Usar **peso de fuente (bold)** y **color estratégico** como herramientas primarias de jerarquía.
+  - Contenido primario → texto oscuro + bold
+  - Contenido secundario → gris medio + peso normal
+  - Contenido terciario → gris claro + peso normal
+- **Nunca usar gris con opacidad** sobre fondos de color o con patrones. En su lugar, igualar el hue del fondo y ajustar el contraste usando formato `oklch`.
+- Cuando el elemento dominante no puede destacar más, **de-enfatizar** los demás elementos visuales (no solo aumentar el elemento destacado).
+- Las **etiquetas son último recurso** — los datos suelen ser autoexplicativos. Combinar etiqueta + valor ("3 Dormitorios") o usar íconos en lugar de texto.
+- El texto bold y los íconos sólidos dominan la atención por área de píxeles; usarlos intencionalmente.
+- La jerarquía visual es **independiente** de la jerarquía semántica HTML — `<h1>` no necesita ser el elemento más grande.
+- Los botones tienen jerarquía de acción: usar color/estilo para denotar primario, secundario, destructivo.
+
+---
+
+## 2. PRINCIPIOS GESTALT (Clase 7)
+
+Aplicar siempre estos principios. El todo es diferente a la suma de sus partes — la mente humana percibe patrones visuales instintivamente.
+
+| Principio | Aplicación obligatoria en UI |
+|-----------|------------------------------|
+| **Similaridad** | Mismos estilos para cards del mismo tipo; colores consistentes para estados de validación |
+| **Proximidad** | Labels directamente adyacentes a inputs; links de nav agrupados; separación visible entre grupos de contenido |
+| **Continuidad** | Alineación vertical en formularios; timelines; patrones de nav que guían el ojo |
+| **Figura-Fondo** | Oscurecer fondo para modales; sombras para cards flotantes; separación clara foreground/background |
+| **Cierre** | Elementos cortados a la mitad en carousels indican contenido scrollable |
+| **Conectividad** | Líneas, flechas o contenedores agrupando visualmente elementos relacionados |
+
+**Regla de oro de espaciado (Proximidad):** El espaciado exterior entre grupos debe ser **mayor** que el espaciado interior que conecta elementos dentro de un grupo.
+
+---
+
+## 3. ESPACIADO Y LAYOUT (Clase 7)
+
+- Dar espacio generoso para que las interfaces "respiren" — mejora la estética y legibilidad.
+- **Durante el diseño, comenzar con espaciado excesivo y reducir progresivamente** (es más fácil ver el exceso que el déficit).
+- Usar un **sistema de espaciado estricto** con escala base 16px y aumentos >25% entre valores.
+  - Escala sugerida: 4, 8, 12, 16, 24, 32, 48, 64, 96px
+- No usar 100% del ancho desktop — limitar el ancho del contenido y centrar para mejor lectura.
+- En formularios/páginas anchas con poco contenido, dividir en columnas en lugar de estirar inputs.
+- **Para layouts responsive seguros:** Usar porcentajes para proporciones, protegidos con `min-width` y `max-width`.
+- Nunca usar valores de espaciado arbitrarios — siempre del sistema.
+
+---
+
+## 4. DISEÑO DE INTERACCIÓN (Clase 10)
+
+### Affordances
+- **Affordance perceptible (ideal):** Las características visuales (forma, color, relieve) comunican claramente la acción posible sin instrucciones.
+- **False affordance (prohibido):** El diseño sugiere una acción que contradice la realidad. Causa errores y frustración.
+- **Hidden affordance:** Solo aceptable si hay sacrificio intencional de descubrimiento por simplicidad visual (documentar el tradeoff).
+
+### Patrones de Lectura y Atención Visual
+- **Los usuarios no leen — escanean** (promedio: 20–28% de las palabras por página).
+- Todo texto debe ser **escaneable**: listas, negritas estratégicas, encabezados claros, contenido conciso y objetivo.
+- Evitar párrafos de texto largo sin estructura visual.
+- **80% de la atención visual** se concentra en el **lado izquierdo** de la pantalla — no poner elementos críticos solo en la derecha.
+- Patrones de escaneo (de menos a más efectivo): F-Pattern → Spotted → Layer-Cake → Commitment.
+- Apuntar a **Layer-Cake o Spotted** con encabezados y texto en negrita estratégico.
+
+### Above the Fold
+- El contenido visible sin scroll recibe **84% más atención** que el contenido debajo del fold.
+- Si el diseño no sugiere más contenido abajo, el 75% de los usuarios no scrolleará — usar flechas o elementos "peek" (principio de cierre/continuidad).
+- La información más crítica debe estar **above the fold**.
+
+### Convenciones (Ley de Jakob)
+- Los usuarios tienen expectativas de otros sitios. Seguir las convenciones reduce la curva de aprendizaje.
+- No romper convenciones sin un motivo UX fuerte y explícito.
+
+---
+
+## 5. DIVULGACIÓN PROGRESIVA Y DIÁLOGOS (Clase 11)
+
+### Progressive Disclosure
+- Mostrar solo lo esencial en la pantalla principal; ocultar funciones avanzadas detrás de interacción secundaria.
+- **Regla de oro:** Lo que se oculta debe ser genuinamente secundario. Si la mayoría necesita la función oculta para completar su tarea, el diseño falla.
+
+### Tabs (Pestañas)
+- Labels de 1-2 palabras máximo.
+- Siempre posicionar sobre el contenido.
+- Resaltar la tab activa con indicador visual claro.
+- **Nunca** apilar en múltiples filas.
+- **Anti-patrón prohibido:** Mezclar "tabs de navegación" (diferentes páginas) con "tabs in-page" (mismo contenido).
+
+### Accordions
+- Usar para: pantallas mobile, múltiples bloques de texto breve (FAQs), páginas de detalles de producto.
+- **No usar** cuando se necesite comparar secciones, cuando el texto sea muy corto, o cuando el contenido oculto sea esencial para la mayoría.
+
+### Modales
+- **Modales SÍ:** Prevenir errores críticos irreversibles (confirmar eliminación); solicitar información de bloqueo indispensable.
+- **Modales NO:** Mostrar información irrelevante (popups de newsletter al cargar); durante transacciones críticas; si el usuario necesita info del fondo para decidir.
+- **Non-modal dialogs:** Preferir para notificaciones, flujos paralelos, consultas rápidas (no bloquean el flujo principal).
+
+---
+
+## 6. REACT — MEJORES PRÁCTICAS (Clase 8 & 9)
+
+### Estructura de Componentes
+- Usar exclusivamente **componentes funcionales**.
+- Los componentes encapsulan estructura, estilo y comportamiento en piezas reutilizables.
+- **Anti-patrón prohibido:** Encadenar múltiples ternarios en JSX — extraer la lógica a una función independiente.
+
+### Estado e Inmutabilidad
+- `setState` es **asíncrono** — usar funciones updater (`prev => prev + 1`) para operaciones que dependan del valor anterior.
+- El estado es **inmutable** — nunca modificar arrays/objetos directamente. Usar spread operator o métodos de array (`.filter()`, `.map()`).
+- **Evitar estado redundante:** Si un dato deriva lógicamente de otro estado o props, declararlo como variable regular — no como estado.
+
+### Keys en Listas
+- Cada elemento hermano en `.map()` **debe** tener un prop `key` único y estable (ej: ID del backend).
+- **Prohibido:** Usar el índice del array como `key` si la lista puede reordenarse, agregar o eliminar elementos.
+
+### Hooks — Uso Correcto
+
+**useState:**
+- No guardar en estado datos que se pueden derivar de otros datos.
+
+**useMemo:**
+- Solo para optimización de cálculos costosos (matemáticas pesadas, filtrado de listas enormes).
+- No abusar — tiene costo de memoria.
+
+**useEffect:**
+- Propósito primario: sincronizar el componente con sistemas externos (APIs, timers, etc.).
+- **Anti-patrón prohibido:** Usar `useEffect` para calcular estado derivado — causa doble render y pesadillas de mantenimiento.
+- **Siempre retornar función de cleanup** cuando el efecto crea recursos (timers, event listeners, fetch, WebSockets):
+  ```tsx
+  useEffect(() => {
+    const timer = setInterval(fn, 1000);
+    return () => clearInterval(timer); // ← SIEMPRE
+  }, [dep]);
+  ```
+
+**useContext:**
+- Para: tema UI, datos de login, idioma/localización.
+- No para: estado local de un componente o un árbol pequeño.
+
+### Comunicación entre Componentes
+- **Parent → Child:** Props (read-only).
+- **Child → Parent:** Callbacks via props.
+- **Árbol profundo / Global:** Context o Zustand.
+
+### Browser Storage
+- `localStorage`: Persistencia permanente. Para: temas, preferencias, configuraciones.
+- `sessionStorage`: Persistencia por tab. Para: procesos temporales aislados, formularios multi-paso.
+- `Cookies`: Para: autenticación, tokens de sesión seguros.
+- **Siempre** usar `JSON.stringify()` al guardar objetos.
+- **PROHIBIDO:** Guardar datos sensibles, contraseñas o tokens en `localStorage`/`sessionStorage`.
+
+### Optimización de Re-renders (Clase 9)
+- **React.memo:** Envolver componentes que reciben props estables para evitar re-renders en cascada desde el padre.
+- **useCallback:** Memorizar funciones para mantener la misma referencia entre renders. **Obligatorio cuando se pasa una función como prop a un componente envuelto en React.memo** — sin él, memo no tiene efecto.
+- **useTransition:** Marcar actualizaciones de estado no urgentes (filtrado pesado, búsquedas) para que React priorice interacciones directas del usuario.
+
+### Patrones de Diseño React
+- **Custom Hooks:** Funciones que comienzan con `use`, encapsulan lógica React reutilizable, separan lógica de UI.
+- **Composition:** Construir componentes complejos desde simples via `children` o "slots" nombrados. Evita prop drilling.
+- **Higher-Order Components (HOC):** Para transformar props o inyectar datos requeridos en componentes.
+
+---
+
+## 7. NEXT.JS — PATRONES Y CONVENCIONES (Clase 12 & 13)
+
+### App Router — Estructura de Archivos
+- `page.tsx` → hace la carpeta accesible como ruta URL.
+- `layout.tsx` → UI compartida que envuelve rutas hijas (no re-renderiza en navegación).
+- `loading.tsx` → skeleton/spinner mientras el segmento carga (Suspense automático).
+- `error.tsx` → captura errores específicos de la ruta.
+- Rutas dinámicas: carpetas con `[param]` (ej: `/[user]/[repo]/page.tsx`).
+- Usar `<Link>` siempre para navegación interna — precarga rutas automáticamente.
+
+### Server vs. Client Components
+- **Regla 80/20:** Mantener el **80% de la app en Server Components**; usar Client Components solo para elementos interactivos en las capas más profundas del árbol.
+- **Server Components (default):**
+  - Pueden leer bases de datos, acceder a env vars, hacer fetch con async/await.
+  - **No pueden** usar hooks (`useState`, `useEffect`) ni eventos (`onClick`).
+- **Client Components (`'use client'`):**
+  - Declarar con `'use client'` en la primera línea del archivo.
+  - Usar solo para interactividad, eventos, browser APIs.
+  - Aumentan el bundle JS enviado al cliente.
+- **No** convertir componentes a Client Components innecesariamente.
+
+### Estrategias de Rendering
+Aplicar la estrategia correcta según las necesidades de cada ruta:
+
+| Estrategia | Cuándo usar |
+|-----------|------------|
+| **SSG** | Portfolios, docs, landing pages (contenido estático) |
+| **SSR** | Datos que cambian en cada visita (búsquedas, cookies) |
+| **ISR** | Blogs, e-commerce (estático pero que se actualiza) — usar `revalidate` |
+| **CSR** | Dashboards altamente interactivos, datos en tiempo real del cliente |
+
+### Data Fetching y Caché (Next 15)
+- En Next 15, `fetch` **no cachea por defecto** — ejecuta en cada visita (comportamiento SSR).
+- Para caché por tiempo: `{ next: { revalidate: 60 } }`.
+- Para caché indefinido: `{ cache: 'force-cache' }`.
+- En Client Components: usar **SWR** o **TanStack Query** en lugar de `useState + useEffect` manual.
+- **Los Client Components nunca deben llamar directamente** a servicios privados (BD, APIs con secretos) — usar Route Handlers como proxy.
+
+### Route Handlers (API Custom)
+- Archivos `route.ts` en carpetas de `/app`.
+- Exportar funciones nombradas por método HTTP (`GET`, `POST`, `PUT`, `DELETE`).
+- Usos: proxy de APIs privadas, webhooks, generación de archivos en servidor.
+
+### Server Actions (Mutaciones)
+- Usar `'use server'` para funciones async ejecutadas estrictamente en el backend.
+- Asignar directamente a `<form action={serverAction}>`.
+- Después de mutaciones, usar `revalidatePath('/ruta')` o `revalidateTag('tag')` para limpiar caché y actualizar datos en pantalla.
+
+### Streaming y Suspense
+- Evitar bloquear la página entera por una query lenta.
+- Envolver componentes con datos lentos en `<Suspense fallback={<Skeleton />}>`.
+- `loading.tsx` actúa como Suspense boundary automático para toda la ruta.
+
+### Middleware
+- `middleware.ts` corre en Edge **antes** de que cualquier request complete.
+- Usar para: autenticación/redirects, detección de idioma, A/B testing.
+- **No** usar para lógica de negocio compleja.
+
+---
+
+## 8. SISTEMAS DE DISEÑO (Clase 14)
+
+### Tokens de Diseño
+- Usar **tokens semánticos** en lugar de valores hardcodeados en la UI.
+  - ❌ `text-blue-500`
+  - ✓ `text-action-primary` (mapeado a `blue-500` en el token)
+- Niveles de tokens:
+  1. Global/Primitivo: valores crudos (`blue-500`)
+  2. Semántico/Alias: significado de uso (`color-action-primary`)
+  3. Componente: específico del componente (`button-padding-x`)
+- **Prohibido:** Usar tokens primitivos directamente en UI — siempre pasar por tokens semánticos.
+
+### Atomic Design
+Estructurar componentes siguiendo la jerarquía:
+1. **Átomos:** Botones, inputs, labels (unidades mínimas)
+2. **Moléculas:** Search bar (input + botón)
+3. **Organismos:** Headers completos, sidebars
+4. **Templates:** Layouts sin datos reales
+5. **Páginas:** Templates con datos reales inyectados
+
+### Errores Comunes a Evitar
+- Construir abstracciones prematuras antes de que sean necesarias.
+- Dejar documentación desactualizada respecto al código vivo.
+- Demasiados props por componente — rompe el sistema.
+- Ignorar la accesibilidad desde la base.
+
+---
+
+## 9. ACCESIBILIDAD (Clase 14)
+
+- El **color no puede ser el único medio** de comunicar información — siempre acompañar con texto o ícono.
+- Soporte de **navegación por teclado** obligatorio en todos los componentes interactivos.
+- Gestión del **foco** esencial en modales, dropdowns, y otros elementos overlay.
+- Usar **Radix UI** como base de primitivos accesibles cuando se construyan nuevos componentes interactivos (incluye keyboard navigation y focus management out-of-the-box).
+
+---
+
+## 10. PERFORMANCE
+
+- Minimizar el JavaScript enviado al cliente (preferir Server Components).
+- Usar **Streaming + Suspense** para queries lentas en lugar de bloquear toda la página.
+- Aplicar **React.memo + useCallback** para componentes con re-renders costosos.
+- `useMemo` solo para cálculos genuinamente costosos — no para todo.
+- Code splitting automático via el sistema de routing de Next.js — no cargar código innecesariamente.
+- Imágenes: usar `<Image>` de Next.js para optimización automática.

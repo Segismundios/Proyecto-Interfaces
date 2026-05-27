@@ -43,12 +43,19 @@ This is a **GitHub UI clone with UX improvements**, built as a frontend-only pro
 ### Components (`src/components/`)
 
 Organized by domain:
-- `ui/` — primitives: Button, Badge, Avatar, Card, Modal, Tabs, Toggle
+- `ui/` — primitives: Button, Badge, Avatar, Card, Modal, Tabs, Toggle, EmptyState, SecurityGate
 - `layout/` — Navbar
 - `home/` — FavoriteRepos, MostUsedRepos, RecentActivity, QuickActions
 - `repo/` — RepoHeader, FileBrowser, ReadmePreview
 - `pr/` — MergeDirectionBanner, ReviewProgressBar, DiffViewer, PRTimeline, CommitList
 - `settings/` — SettingsSidebar
+
+### Contexts (`src/context/`)
+
+Client-side global state, all persisted in `localStorage`:
+- `FavoritesContext` — set of `"owner/name"` strings marked as favorites
+- `VisibilityContext` — per-repo visibility overrides (public/private)
+- `SecurityContext` — verification gate for sensitive routes (tokens, SSH keys). Verification persists for 30 minutes via a timestamp in `localStorage` (key: `gh-security-verified-until`). Direct URL access to `/settings/tokens` or `/settings/ssh-keys` triggers `<SecurityGate>` until the user confirms a password.
 
 ### Types (`src/types/index.ts`)
 

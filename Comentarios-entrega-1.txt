@@ -1,0 +1,10 @@
+1. Siempre describir que se hizo, como, por que, a quienes y en que medio. Independiente de estos detalles, y que tampoco mencionan como lo analizaron, se suma el puntaje del User Persona, y les queda en 17.
+
+2. El VPC lo encontré un buen inicio, pero recuerden redactar y profundizar más allá, ya que de esta forma es posible ver de donde sacan las decisiones de construción, y pode rebatir o ayudarles a profundizar.
+
+3. El prototipo esta bien encaminado, cumple lo que se dice, y Claude hizo buen trabajo.
+
+Tengo un problema con su prototipo, y es algo más bien de comprensión del proceso. Se quedaron con elementos específicos superficiales, pero les faltó dar una buena de cuales son los dolres reales, pues se quedaron solo con detalles específicos. Esto se traduce no en un producto innovador, sino un UI 2.0, que cumple a sus objetivos. Pero reitero, basado en sus sintomas ¿cual es el problema de fondo?, ¿como esto se vería traducido en un producto concreto?
+Actualmente, para que entiendan a lo que me refiero, es como que ustedes vieran un paciente con fiebre y tos, y dijeran de Diagnóstico: "Fiebre y Tos", ponganlo en una bañera para que baje la fiebre y tomen este antitusivo para la tos. No hay realmente un diagnostico que abarque el problema de fondo que causa esos sintomas, y la solucion es inconexa.
+
+El prototipo es bueno asi como su base, pero falta esa vuelta, y es super importante.

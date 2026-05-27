@@ -3,6 +3,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { FavoritesProvider } from "@/context/FavoritesContext";
 import { VisibilityProvider } from "@/context/VisibilityContext";
+import { SecurityProvider } from "@/context/SecurityContext";
 
 export const metadata: Metadata = {
   title: "DevHub",
@@ -18,12 +19,12 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <FavoritesProvider>
-        <VisibilityProvider>
-          <Navbar />
-          <main className="max-w-7xl mx-auto px-4 py-6">
-            {children}
-          </main>
-        </VisibilityProvider>
+          <VisibilityProvider>
+            <SecurityProvider>
+              <Navbar />
+              <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
+            </SecurityProvider>
+          </VisibilityProvider>
         </FavoritesProvider>
       </body>
     </html>

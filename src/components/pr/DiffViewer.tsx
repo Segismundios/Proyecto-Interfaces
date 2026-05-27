@@ -1,6 +1,10 @@
+// Client component: DiffFileView usa useState para el expand/collapse del hunk;
+// requiere estado reactivo en el browser.
+"use client";
+
 import { DiffFile, Reviewer } from "@/types";
 import { FileText, ChevronDown, ChevronRight, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { currentUser, collaborators } from "@/data/users";
 import { Avatar } from "@/components/ui/Avatar";
 
@@ -28,7 +32,7 @@ export function DiffViewer({ files, reviewers, fileReviews, onToggleFileReview }
 
   return (
     <div className="space-y-3">
-      {/* Summary */}
+      {/* Summary bar */}
       <div className="flex items-center gap-4 text-xs text-gh-fg-muted p-3 bg-gh-canvas-subtle border border-gh-border rounded-md">
         <span>
           Showing <strong className="text-gh-fg">{files.length}</strong> changed files
@@ -41,14 +45,14 @@ export function DiffViewer({ files, reviewers, fileReviews, onToggleFileReview }
         </span>
       </div>
 
-      {/* File diffs */}
+      {/* File diffs — React.memo evita re-render cuando sólo cambia un archivo */}
       {files.map((file) => (
         <DiffFileView
           key={file.filename}
           file={file}
           reviewers={reviewers}
           reviewedBy={fileReviews[file.filename] ?? []}
-          onToggleReview={() => onToggleFileReview(file.filename)}
+          onToggleReview={onToggleFileReview}
         />
       ))}
     </div>
@@ -59,21 +63,36 @@ interface DiffFileViewProps {
   file: DiffFile;
   reviewers: Reviewer[];
   reviewedBy: string[];
-  onToggleReview: () => void;
+  onToggleReview: (filename: string) => void;
 }
 
-function DiffFileView({ file, reviewers, reviewedBy, onToggleReview }: DiffFileViewProps) {
+/**
+ * React.memo: evita re-renders cuando cambia el review de otro archivo.
+ * El array reviewedBy y onToggleReview son las únicas props que cambian.
+ */
+const DiffFileView = memo(function DiffFileView({
+  file,
+  reviewers,
+  reviewedBy,
+  onToggleReview,
+}: DiffFileViewProps) {
   const [expanded, setExpanded] = useState(true);
   const currentUserReviewed = reviewedBy.includes(currentUser.username);
+
+  // useCallback: mantiene referencia estable para no romper memo del padre
+  const handleToggle = useCallback(() => {
+    onToggleReview(file.filename);
+  }, [onToggleReview, file.filename]);
 
   return (
     <div className="border border-gh-border rounded-md overflow-hidden">
       {/* File header */}
       <div className="flex items-center gap-3 px-3 py-2 bg-gh-canvas-subtle border-b border-gh-border">
-        {/* Expand toggle + filename */}
-        <div
-          className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+        <button
+          className="flex items-center gap-2 cursor-pointer flex-1 min-w-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gh-accent rounded"
           onClick={() => setExpanded(!expanded)}
+          aria-expanded={expanded}
+          aria-label={`${expanded ? "Colapsar" : "Expandir"} diff de ${file.filename}`}
         >
           {expanded ? (
             <ChevronDown className="w-3.5 h-3.5 text-gh-fg-muted shrink-0" />
@@ -82,10 +101,10 @@ function DiffFileView({ file, reviewers, reviewedBy, onToggleReview }: DiffFileV
           )}
           <FileText className="w-3.5 h-3.5 text-gh-fg-muted shrink-0" />
           <span className="text-sm font-mono text-gh-fg truncate">{file.filename}</span>
-        </div>
+        </button>
 
         <div className="flex items-center gap-3 shrink-0">
-          {/* Additions / deletions + mini bar */}
+          {/* Additions / deletions mini bar */}
           <div className="flex items-center gap-2 text-xs">
             <span className="text-gh-success">+{file.additions}</span>
             <span className="text-gh-danger">-{file.deletions}</span>
@@ -99,7 +118,7 @@ function DiffFileView({ file, reviewers, reviewedBy, onToggleReview }: DiffFileV
             </div>
           </div>
 
-          {/* Reviewer avatars: who reviewed this file */}
+          {/* Reviewer avatars */}
           {reviewers.length > 0 && (
             <div className="flex items-center -space-x-1">
               {reviewers.map((reviewer) => {
@@ -115,7 +134,11 @@ function DiffFileView({ file, reviewers, reviewedBy, onToggleReview }: DiffFileV
                         hasReviewed ? "opacity-100" : "opacity-25"
                       }`}
                     >
-                      <Avatar src={getUserAvatar(reviewer.username)} alt={reviewer.username} size="sm" />
+                      <Avatar
+                        src={getUserAvatar(reviewer.username)}
+                        alt={reviewer.username}
+                        size="sm"
+                      />
                     </div>
                     {hasReviewed && (
                       <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-gh-success rounded-full flex items-center justify-center ring-1 ring-gh-canvas-subtle">
@@ -130,8 +153,8 @@ function DiffFileView({ file, reviewers, reviewedBy, onToggleReview }: DiffFileV
 
           {/* Mark as reviewed toggle */}
           <button
-            onClick={onToggleReview}
-            className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors ${
+            onClick={handleToggle}
+            className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gh-accent ${
               currentUserReviewed
                 ? "bg-gh-success/20 border-gh-success text-gh-success"
                 : "bg-gh-btn-bg border-gh-border text-gh-fg-muted hover:text-gh-fg hover:border-gh-fg-muted"
@@ -143,15 +166,17 @@ function DiffFileView({ file, reviewers, reviewedBy, onToggleReview }: DiffFileV
         </div>
       </div>
 
-      {/* Diff content */}
+      {/* Diff lines */}
       {expanded && (
         <div className="font-mono text-xs overflow-x-auto">
-          {file.hunks.map((hunk, hi) => (
-            <div key={hi}>
+          {file.hunks.map((hunk) => (
+            <div key={hunk.header}>
               <div className="bg-gh-accent/10 text-gh-accent px-4 py-1 border-b border-gh-border">
                 {hunk.header}
               </div>
-              {hunk.lines.map((line, li) => {
+              {hunk.lines.map((line) => {
+                // Clave estable: tipo + número de línea (único en el hunk)
+                const lineKey = `${line.type}-${line.oldLineNumber ?? "x"}-${line.newLineNumber ?? "x"}`;
                 const bgClass =
                   line.type === "addition"
                     ? "bg-gh-diff-add-bg"
@@ -168,7 +193,7 @@ function DiffFileView({ file, reviewers, reviewedBy, onToggleReview }: DiffFileV
                   line.type === "addition" ? "+" : line.type === "deletion" ? "-" : " ";
 
                 return (
-                  <div key={li} className={`flex ${bgClass} border-b border-gh-border/30`}>
+                  <div key={lineKey} className={`flex ${bgClass} border-b border-gh-border/30`}>
                     <span className="w-10 text-right pr-2 text-gh-fg-muted select-none shrink-0 border-r border-gh-border/30 py-0.5">
                       {line.oldLineNumber || ""}
                     </span>
@@ -187,4 +212,4 @@ function DiffFileView({ file, reviewers, reviewedBy, onToggleReview }: DiffFileV
       )}
     </div>
   );
-}
+});

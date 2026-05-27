@@ -2,17 +2,21 @@
 // por carpeta (Mejora 4) y useState para navegar dentro de carpetas.
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback } from "react";
 import { FileEntry } from "@/types";
-import { Folder, FileText, Download, ChevronDown, GitBranch, Check } from "lucide-react";
+import { Folder, FileText, Download, ChevronDown, GitBranch } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 
 interface FileBrowserProps {
   files: FileEntry[];
 }
 
-function flatten(entries: FileEntry[], prefix = ""): Array<{ path: string; type: FileEntry["type"]; lastCommitMessage: string }> {
+function flatten(
+  entries: FileEntry[],
+  prefix = ""
+): Array<{ path: string; type: FileEntry["type"]; lastCommitMessage: string }> {
   const out: Array<{ path: string; type: FileEntry["type"]; lastCommitMessage: string }> = [];
   for (const entry of entries) {
     const path = prefix ? `${prefix}/${entry.name}` : entry.name;
@@ -43,13 +47,20 @@ function downloadJson(folderName: string, folder: FileEntry) {
 }
 
 export function FileBrowser({ files }: FileBrowserProps) {
-  const [toast, setToast] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const handleFolderDownload = (folder: FileEntry) => {
-    downloadJson(folder.name, folder);
-    setToast(`${folder.name}/ descargado como JSON (mock)`);
-    setTimeout(() => setToast(null), 2500);
-  };
+  // useCallback: referencia estable para no romper React.memo de FileRow
+  const handleFolderDownload = useCallback(
+    (folder: FileEntry) => {
+      downloadJson(folder.name, folder);
+      toast({
+        title: `${folder.name}/ descargado`,
+        description: "Manifest JSON — en producción sería un .zip real.",
+        variant: "success",
+      });
+    },
+    [toast]
+  );
 
   const sorted = [...files].sort((a, b) => {
     if (a.type === b.type) return a.name.localeCompare(b.name);
@@ -96,40 +107,37 @@ export function FileBrowser({ files }: FileBrowserProps) {
           ))
         )}
       </div>
-
-      {/* Toast */}
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-6 right-6 bg-gh-canvas-subtle border border-gh-success/40 rounded-lg px-4 py-3 shadow-lg flex items-center gap-2 z-50"
-        >
-          <Check className="w-4 h-4 text-gh-success" />
-          <span className="text-sm text-gh-fg">{toast}</span>
-        </div>
-      )}
     </div>
   );
 }
 
-function FileRow({
-  file,
-  isLast,
-  onFolderDownload,
-  depth = 0,
-}: {
+interface FileRowProps {
   file: FileEntry;
   isLast: boolean;
   onFolderDownload: (folder: FileEntry) => void;
   depth?: number;
-}) {
+}
+
+/**
+ * React.memo: evita re-renders cuando sólo cambia el toast o el orden de
+ * otro archivo. Las props son estables (onFolderDownload via useCallback).
+ */
+const FileRow = memo(function FileRow({
+  file,
+  isLast,
+  onFolderDownload,
+  depth = 0,
+}: FileRowProps) {
   return (
     <div
       className={`flex items-center px-4 py-2 text-sm hover:bg-gh-canvas-subtle transition-colors group ${
         !isLast ? "border-b border-gh-border" : ""
       }`}
     >
-      <div className="flex items-center gap-2 min-w-[200px]" style={{ paddingLeft: depth * 16 }}>
+      <div
+        className="flex items-center gap-2 min-w-[200px]"
+        style={{ paddingLeft: depth * 16 }}
+      >
         {file.type === "folder" ? (
           <Folder className="w-4 h-4 text-gh-accent" />
         ) : (
@@ -139,7 +147,7 @@ function FileRow({
           {file.name}
         </span>
 
-        {/* MEJORA 4: Download button for folders — granularidad alineada con la tarea */}
+        {/* MEJORA 4: Download button para carpetas — visible en hover, siempre accessible */}
         {file.type === "folder" && (
           <button
             onClick={() => onFolderDownload(file)}
@@ -161,4 +169,4 @@ function FileRow({
       </div>
     </div>
   );
-}
+});

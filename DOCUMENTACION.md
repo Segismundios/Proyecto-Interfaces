@@ -9,15 +9,16 @@
 5. [Datos Mock](#5-datos-mock)
 6. [Configuracion de Estilos](#6-configuracion-de-estilos)
 7. [Funciones Utilitarias](#7-funciones-utilitarias)
-8. [Componentes UI Base](#8-componentes-ui-base)
-9. [Componentes de Layout](#9-componentes-de-layout)
-10. [Vista 1: Home Dashboard (Mejora 1)](#10-vista-1-home-dashboard---mejora-1)
-11. [Vista 2: Settings (Mejora 2)](#11-vista-2-settings---mejora-2)
-12. [Vista 3: Repositorio (Mejoras 3 y 4)](#12-vista-3-repositorio---mejoras-3-y-4)
-13. [Vista 4: Pull Request (Mejora 5)](#13-vista-4-pull-request---mejora-5)
-14. [Flujo de Datos y Relaciones entre Componentes](#14-flujo-de-datos-y-relaciones-entre-componentes)
-15. [Rutas de la Aplicacion](#15-rutas-de-la-aplicacion)
-16. [Decisiones Tecnicas](#16-decisiones-tecnicas)
+8. [Custom Hooks](#8-custom-hooks)
+9. [Componentes UI Base](#9-componentes-ui-base)
+10. [Componentes de Layout](#10-componentes-de-layout)
+11. [Vista 1: Home Dashboard (Mejora 1)](#11-vista-1-home-dashboard---mejora-1)
+12. [Vista 2: Settings (Mejora 2)](#12-vista-2-settings---mejora-2)
+13. [Vista 3: Repositorio (Mejoras 3 y 4)](#13-vista-3-repositorio---mejoras-3-y-4)
+14. [Vista 4: Pull Request (Mejora 5)](#14-vista-4-pull-request---mejora-5)
+15. [Flujo de Datos y Relaciones entre Componentes](#15-flujo-de-datos-y-relaciones-entre-componentes)
+16. [Rutas de la Aplicacion](#16-rutas-de-la-aplicacion)
+17. [Decisiones Tecnicas](#17-decisiones-tecnicas)
 
 ---
 
@@ -99,20 +100,28 @@ github-clone/
 ├── public/                          # Archivos estaticos
 ├── src/
 │   ├── app/                         # Paginas (App Router de Next.js)
-│   │   ├── layout.tsx               # Layout raiz (Navbar + contenedor)
+│   │   ├── layout.tsx               # Layout raiz (Navbar + todos los Providers)
 │   │   ├── page.tsx                 # "/" - Home Dashboard
 │   │   ├── globals.css              # Estilos globales
+│   │   ├── notifications/
+│   │   │   └── page.tsx             # "/notifications" - Centro de notificaciones
+│   │   ├── explore/
+│   │   │   └── page.tsx             # "/explore" - Trending y tus repos
 │   │   ├── settings/
 │   │   │   ├── layout.tsx           # Layout de settings (sidebar)
-│   │   │   ├── page.tsx             # "/settings" - Perfil
+│   │   │   ├── page.tsx             # "/settings" - Perfil editable
 │   │   │   ├── tokens/
 │   │   │   │   └── page.tsx         # "/settings/tokens" (protegido por SecurityGate)
 │   │   │   └── ssh-keys/
 │   │   │       └── page.tsx         # "/settings/ssh-keys" (protegido por SecurityGate)
-│   │   ├── explore/
-│   │   │   └── page.tsx             # "/explore" - Trending y tus repos
 │   │   └── [user]/[repo]/
 │   │       ├── page.tsx             # "/:user/:repo" - Vista de repo
+│   │       ├── loading.tsx          # Skeleton de carga para rutas dinamicas
+│   │       ├── error.tsx            # Error boundary para rutas dinamicas
+│   │       ├── issues/
+│   │       │   ├── page.tsx         # "/:user/:repo/issues" - Lista de issues
+│   │       │   └── [id]/
+│   │       │       └── page.tsx     # "/:user/:repo/issues/:id" - Detalle de issue
 │   │       └── pull/[id]/
 │   │           └── page.tsx         # "/:user/:repo/pull/:id" - Vista de PR
 │   ├── components/                  # Componentes reutilizables
@@ -121,14 +130,17 @@ github-clone/
 │   │   │   ├── Badge.tsx
 │   │   │   ├── Button.tsx
 │   │   │   ├── Card.tsx
+│   │   │   ├── DropdownMenu.tsx     # Radix DropdownMenu (keyboard-aware)
 │   │   │   ├── EmptyState.tsx
-│   │   │   ├── Modal.tsx
+│   │   │   ├── Modal.tsx            # Radix Dialog (focus trap, Escape)
 │   │   │   ├── SecurityGate.tsx     # Gate de ruta para credenciales sensibles
-│   │   │   ├── Tabs.tsx
-│   │   │   └── Toggle.tsx
+│   │   │   ├── Tabs.tsx             # Radix Tabs (flechas de teclado)
+│   │   │   ├── Toast.tsx            # Radix Toast + ToastProvider + useToast
+│   │   │   └── Toggle.tsx           # Radix Switch (aria-checked automatico)
 │   │   ├── layout/                  # Componentes de layout global
-│   │   │   └── Navbar.tsx
+│   │   │   └── Navbar.tsx           # Busqueda, notificaciones, menus Radix
 │   │   ├── home/                    # Componentes del dashboard
+│   │   │   ├── ActivityTabs.tsx
 │   │   │   ├── FavoriteRepos.tsx
 │   │   │   ├── MostUsedRepos.tsx
 │   │   │   ├── RecentActivity.tsx
@@ -147,19 +159,26 @@ github-clone/
 │   │       └── CommitList.tsx
 │   ├── context/                     # Providers de estado global (localStorage)
 │   │   ├── FavoritesContext.tsx     # Repos marcados como favoritos
+│   │   ├── UserDataContext.tsx      # Store unificado: issues, PRs, notif, forks, watches, perfil
 │   │   ├── VisibilityContext.tsx    # Overrides de visibilidad por repo
 │   │   └── SecurityContext.tsx      # Verificacion de password con TTL 30 min
 │   ├── data/                        # Datos mock (hardcodeados)
 │   │   ├── users.ts
 │   │   ├── repos.ts
 │   │   ├── files.ts
+│   │   ├── issues.ts                # Issues del repo (3 issues con comentarios)
+│   │   ├── workflowRuns.ts          # Runs de CI/CD (5 runs, varios estados)
+│   │   ├── notifications.ts         # Notificaciones del usuario (mix leidas/no leidas)
 │   │   ├── tokens.ts
 │   │   ├── sshKeys.ts
 │   │   └── pullRequests.ts
 │   ├── types/                       # Definiciones de tipos TypeScript
 │   │   └── index.ts
-│   └── lib/                         # Funciones utilitarias
-│       └── utils.ts
+│   └── lib/                         # Funciones utilitarias y hooks
+│       ├── utils.ts
+│       └── hooks/
+│           ├── useLocalStorage.ts   # Estado persistido en localStorage (cross-tab)
+│           └── useDebounce.ts       # Debounce generico para inputs
 ├── tailwind.config.ts               # Configuracion de Tailwind con tema GitHub
 ├── tsconfig.json                    # Configuracion de TypeScript
 ├── package.json
@@ -168,12 +187,12 @@ github-clone/
 
 ### Convencion de directorios
 
-- **`app/`**: Cada archivo `page.tsx` define una ruta. Los directorios con `[nombre]` son rutas dinamicas.
+- **`app/`**: Cada archivo `page.tsx` define una ruta. Los directorios con `[nombre]` son rutas dinamicas. `loading.tsx` y `error.tsx` son convenciones de Next.js para Suspense y Error Boundaries automaticos.
 - **`components/`**: Organizados por dominio funcional (`ui/`, `home/`, `settings/`, `repo/`, `pr/`).
-- **`context/`**: Providers de React Context para estado global ligero. Toda la persistencia ocurre en `localStorage` (no sessionStorage, no backend).
+- **`context/`**: Providers de React Context para estado global ligero. Toda la persistencia ocurre en `localStorage` (no sessionStorage, no backend). Los providers se anidan en `layout.tsx`.
 - **`data/`**: Cada archivo exporta constantes con datos mock tipados.
 - **`types/`**: Archivo unico con todas las interfaces compartidas.
-- **`lib/`**: Utilidades puras sin dependencias de React.
+- **`lib/`**: Utilidades (`utils.ts`) y hooks reutilizables (`hooks/`). Los hooks son Client-only (usan `useState`/`useEffect`).
 
 ---
 
@@ -337,6 +356,86 @@ export interface SSHKey {
 }
 ```
 
+### 4.11 UserProfile
+
+```typescript
+export interface UserProfile {
+  username: string;          // Username unico del usuario
+  displayName: string;       // Nombre visible
+  avatarUrl: string;         // URL del avatar
+  bio: string;               // Biografia corta
+  location?: string;         // Ciudad/pais (opcional)
+  email?: string;            // Email publico (opcional)
+}
+```
+
+Extiende la interfaz `User` con campos opcionales (`location`, `email`) que el usuario puede editar en la pagina de Settings. Almacenado en `UserDataContext` via `localStorage`.
+
+### 4.12 Issue / IssueComment
+
+```typescript
+export interface Issue {
+  id: number;                      // Numero del issue
+  repoOwner: string;               // Dueno del repo
+  repoName: string;                // Nombre del repo
+  title: string;                   // Titulo del issue
+  body: string;                    // Descripcion (texto plano)
+  status: "open" | "closed";       // Estado actual
+  author: string;                  // Username del autor
+  labels: string[];                // Etiquetas (e.g., ["bug", "enhancement"])
+  createdAt: string;               // Fecha ISO de creacion
+  updatedAt: string;               // Fecha ISO de ultima actualizacion
+  comments: IssueComment[];        // Comentarios del issue
+}
+
+export interface IssueComment {
+  id: string;                      // ID unico (e.g., "c1234567890")
+  author: string;                  // Username del autor
+  body: string;                    // Cuerpo del comentario
+  createdAt: string;               // Fecha ISO
+}
+```
+
+Usado en: `app/[user]/[repo]/issues/page.tsx`, `issues/[id]/page.tsx`. Los issues se almacenan y mutan via `UserDataContext` (addIssue, closeIssue, addCommentToIssue).
+
+### 4.13 WorkflowRun
+
+```typescript
+export interface WorkflowRun {
+  id: string;                                              // ID unico del run
+  repoOwner: string;
+  repoName: string;
+  workflowName: string;                                    // Nombre del workflow (e.g., "CI")
+  status: "success" | "failure" | "running" | "cancelled";
+  branch: string;                                          // Rama que disparo el run
+  commit: string;                                          // Mensaje del commit
+  commitSha: string;                                       // SHA corto
+  author: string;                                          // Username que hizo el push
+  duration: number;                                        // Duracion en segundos (0 si esta running)
+  triggeredAt: string;                                     // Fecha ISO
+}
+```
+
+Usado en: Tab "Actions" de `app/[user]/[repo]/page.tsx`. Se muestra con iconos de estado (CheckCircle verde, XCircle rojo, Loader2 girando, AlertCircle gris).
+
+### 4.14 AppNotification
+
+```typescript
+export interface AppNotification {
+  id: string;                             // ID unico
+  type: "pr" | "issue" | "mention" | "ci"; // Tipo de notificacion
+  title: string;                          // Titulo corto
+  body: string;                           // Descripcion
+  repoOwner: string;
+  repoName: string;
+  href: string;                           // URL de destino al hacer click
+  read: boolean;                          // Si ya fue leida
+  createdAt: string;                      // Fecha ISO
+}
+```
+
+Usado en: dropdown de notificaciones en `Navbar`, pagina `/notifications`. Las notificaciones no leidas muestran un punto azul. `unreadCount` (derivado de `UserDataContext`) alimenta el badge en la campana de la Navbar.
+
 ---
 
 ## 5. Datos Mock
@@ -398,6 +497,46 @@ Exporta 3 tokens de acceso personal con nombres realistas (`laptop-dev-token`, `
 ### 5.6 sshKeys.ts
 
 Exporta 2 llaves SSH (`Laptop personal - Ubuntu`, `PC Lab Universidad`) con fingerprints SHA256 simulados.
+
+### 5.7 issues.ts
+
+Exporta `issuesData`: array de 3 issues del repo `proyecto-interfaces`:
+
+| # | Titulo | Estado | Labels | Comentarios |
+|---|--------|--------|--------|-------------|
+| 1 | "Mejorar accesibilidad del formulario de tokens" | open | bug, accessibility | 2 |
+| 2 | "Agregar soporte para tema claro" | closed | enhancement | 1 |
+| 3 | "Error en la carga de avatares en Firefox" | open | bug | 0 |
+
+Cada issue tiene `author`, `createdAt`, `updatedAt` y un array de `IssueComment[]`. Estos datos son la semilla inicial del `UserDataContext`; cualquier issue creado por el usuario se agrega al store en memoria/localStorage.
+
+### 5.8 workflowRuns.ts
+
+Exporta `workflowRunsData`: array de 5 runs de CI/CD del repo `proyecto-interfaces`:
+
+| Workflow | Estado | Rama | Duracion |
+|----------|--------|------|----------|
+| CI | success | main | 94 s |
+| Deploy Preview | success | feature/settings | 127 s |
+| CI | failure | feat/dark-mode | 43 s |
+| CI | running | fix/avatar-bug | 0 s (en progreso) |
+| Deploy Preview | cancelled | experiment/redux | 0 s |
+
+Usado en el tab "Actions" de la vista de repositorio. La duracion `0` indica un run aun en progreso o cancelado antes de terminar.
+
+### 5.9 notifications.ts
+
+Exporta `notificationsData`: array de 5 notificaciones de tipos mixtos:
+
+| Tipo | Titulo | Leida |
+|------|--------|-------|
+| pr | "PR #1 aprobado por maria-garcia" | false |
+| issue | "Nuevo issue: Error en formulario" | false |
+| mention | "Te mencionaron en PR #2" | true |
+| ci | "CI fallido en feat/dark-mode" | false |
+| pr | "PR #3 tiene cambios solicitados" | true |
+
+El campo `href` apunta a la ruta de destino correspondiente. `unreadCount` en `UserDataContext` filtra `!n.read` para el badge de la campana en Navbar.
 
 ---
 
@@ -475,13 +614,75 @@ Usado en: Tokens page (fechas de creacion/expiracion), SSH Keys page (fecha de a
 
 ---
 
-## 8. Componentes UI Base
+## 8. Custom Hooks
+
+Directorio: `src/lib/hooks/`
+
+Hooks reutilizables que encapsulan logica de estado. Solo se pueden usar en **Client Components** (`"use client"`) porque acceden a `window` o usan `useEffect`/`useState`.
+
+### 8.1 useLocalStorage\<T\> (`useLocalStorage.ts`)
+
+```typescript
+function useLocalStorage<T>(
+  key: string,
+  initialValue: T
+): [T, (value: T | ((prev: T) => T)) => void]
+```
+
+**Proposito:** Persiste un valor en `localStorage` con la misma API que `useState`. Reemplaza el patron duplicado que existia en `FavoritesContext`, `VisibilityContext` y `SecurityContext`.
+
+**Comportamiento:**
+- En el primer render lee `localStorage[key]` (o usa `initialValue` si no existe o si estamos en SSR).
+- El setter serializa el nuevo valor con `JSON.stringify` antes de guardarlo.
+- Escucha el evento nativo `storage` para **sincronizar entre tabs**: si el mismo usuario abre dos pestanas, un cambio en una se propaga a la otra sin recargar.
+- El setter acepta tanto un valor directo como una funcion updater `(prev) => next`, igual que `useState`.
+
+**Usado por:** `UserDataContext`, `FavoritesContext`, `VisibilityContext`, `SecurityContext`.
+
+---
+
+### 8.2 useDebounce\<T\> (`useDebounce.ts`)
+
+```typescript
+function useDebounce<T>(value: T, delay: number = 300): T
+```
+
+**Proposito:** Retorna una version "debounceada" de `value` que solo se actualiza una vez que pasan `delay` ms sin nuevos cambios. Evita calculos costosos en cada keystroke.
+
+**Implementacion:** `useEffect` con `setTimeout`; el cleanup llama a `clearTimeout` para cancelar el timer anterior antes de crear uno nuevo (regla esencial de `useEffect` con efectos de tiempo).
+
+**Usado por:** `Navbar` — el input de busqueda llama a `useDebounce(query, 200)` para filtrar repositorios con 200 ms de espera tras el ultimo keystroke.
+
+---
+
+### 8.3 useToast() (`src/components/ui/Toast.tsx`)
+
+```typescript
+function useToast(): { toast: (item: { title: string; description?: string; variant?: "success" | "error" | "info" }) => void }
+```
+
+**Proposito:** Hook de acceso al `ToastContext`. Permite mostrar notificaciones emergentes desde cualquier componente sin prop-drilling.
+
+**Implementacion:** Vive en `Toast.tsx` junto con el `ToastProvider`. El provider mantiene la lista de toasts activos como `useState<ToastItem[]>`, cada uno con un `id` unico. Tras 5 segundos el Radix Toast lo marca como cerrado (animacion de salida); un `setTimeout` de 6.5 s lo elimina del array.
+
+**Uso tipico:**
+```typescript
+const { toast } = useToast();
+toast({ title: "Fork creado", variant: "success" });
+toast({ title: "Error al guardar", description: "Intentalo de nuevo", variant: "error" });
+```
+
+**Usado por:** `FileBrowser` (descarga de carpeta), `RepoHeader` (fork/watch), paginas de Issues y PR (merge).
+
+---
+
+## 9. Componentes UI Base
 
 Directorio: `src/components/ui/`
 
 Estos son los primitivos de interfaz reutilizados en todo el proyecto. Todos aceptan `children` y/o `className` para composicion flexible.
 
-### 8.1 Avatar (`Avatar.tsx`)
+### 9.1 Avatar (`Avatar.tsx`)
 
 Renderiza una imagen circular para avatares de usuario.
 
@@ -493,7 +694,7 @@ Renderiza una imagen circular para avatares de usuario.
 
 **Usado en:** Navbar, Home sidebar, Settings, PRTimeline, CommitList, ReviewProgressBar, PR page header.
 
-### 8.2 Badge (`Badge.tsx`)
+### 9.2 Badge (`Badge.tsx`)
 
 Etiqueta de estado con color segun variante.
 
@@ -512,7 +713,7 @@ Mapeo de variantes:
 
 **Usado en:** RecentActivity, RepoHeader, Repo PR list, PR page, Token scopes, PR labels.
 
-### 8.3 Button (`Button.tsx`)
+### 9.3 Button (`Button.tsx`)
 
 Boton estilizado con multiples variantes.
 
@@ -532,7 +733,7 @@ Variantes:
 
 **Usado en:** Todas las paginas interactivas (Settings, Repo, PR).
 
-### 8.4 Card (`Card.tsx`)
+### 9.4 Card (`Card.tsx`)
 
 Contenedor con fondo subtle, borde y bordes redondeados.
 
@@ -543,7 +744,7 @@ Contenedor con fondo subtle, borde y bordes redondeados.
 
 **Usado en:** FavoriteRepos, Settings page (cards de acceso rapido).
 
-### 8.5 Modal (`Modal.tsx`)
+### 9.5 Modal (`Modal.tsx`)
 
 **Componente cliente** (`"use client"`). Dialog modal con overlay oscuro.
 
@@ -562,7 +763,7 @@ Estructura interna:
 
 **Usado en:** Tokens (crear token), SSH Keys (agregar key), RepoHeader (confirmar cambio de visibilidad).
 
-### 8.6 Tabs (`Tabs.tsx`)
+### 9.6 Tabs (`Tabs.tsx`)
 
 **Componente cliente**. Navegacion por pestanas con indicador activo.
 
@@ -581,7 +782,7 @@ El tab activo muestra un borde inferior azul (`border-gh-accent`). Los contadore
 
 **Usado en:** Repo page (Code, Issues, PRs, Actions), PR page (Conversation, Commits, Files Changed).
 
-### 8.7 Toggle (`Toggle.tsx`)
+### 9.7 Toggle (`Toggle.tsx`)
 
 **Componente cliente**. Interruptor deslizante (switch).
 
@@ -594,7 +795,7 @@ El tab activo muestra un borde inferior azul (`border-gh-accent`). Los contadore
 
 Implementa `role="switch"` con `aria-checked`, focus ring, y estado disabled. Disponible en el proyecto aunque actualmente no se usa directamente (la Mejora 3 usa un Button + Modal en lugar de un toggle simple por seguridad).
 
-### 8.8 EmptyState (`EmptyState.tsx`)
+### 9.8 EmptyState (`EmptyState.tsx`)
 
 **Componente servidor**. Estado vacio reutilizable con icono + titulo + descripcion + CTA opcional.
 
@@ -608,7 +809,7 @@ Implementa `role="switch"` con `aria-checked`, focus ring, y estado disabled. Di
 
 **Usado en:** FavoriteRepos (sin favoritos), RecentActivity (sin actividad), TokensPage (sin tokens), SSHKeysPage (sin keys).
 
-### 8.9 SecurityGate (`SecurityGate.tsx`)
+### 9.9 SecurityGate (`SecurityGate.tsx`)
 
 **Componente cliente**. Gate de proteccion a nivel de pagina: bloquea el contenido sensible hasta que el usuario confirme su contraseña, **incluso si llega por URL directa** o bookmark.
 
@@ -629,44 +830,130 @@ Implementa `role="switch"` con `aria-checked`, focus ring, y estado disabled. Di
 
 **Mock:** cualquier contraseña no vacia es valida (no hay backend). En produccion, `verify()` haria una llamada al servidor de auth.
 
+### 9.10 DropdownMenu (`DropdownMenu.tsx`)
+
+**Componente cliente** (Radix DropdownMenu). Menus desplegables con navegacion por teclado completa.
+
+**Sub-componentes exportados como objeto `DropdownMenu`:**
+
+| Sub-componente | Descripcion |
+|----------------|-------------|
+| `DropdownMenu.Root` | Raiz de Radix (controla estado open/closed) |
+| `DropdownMenu.Trigger` | Elemento que abre el menu (acepta `asChild` para no agregar DOM extra) |
+| `DropdownMenu.Content` | Panel flotante con animaciones de entrada/salida; props: `align`, `className` |
+| `DropdownMenu.Item` | Item clickeable; props: `onSelect`, `disabled`, `className` |
+| `DropdownMenu.Separator` | Linea divisoria horizontal |
+| `DropdownMenu.Label` | Etiqueta de seccion (no clickeable, texto gris muted) |
+
+**Accesibilidad (gestionada por Radix):**
+- ↑/↓ navega entre items
+- `Escape` cierra el menu y devuelve el foco al Trigger
+- `Enter`/`Space` activa el item enfocado
+- `aria-expanded` y `aria-haspopup` en el Trigger automaticos
+
+**Patron de uso en el proyecto:**
+```tsx
+<DropdownMenu.Root>
+  <DropdownMenu.Trigger asChild>
+    <button>Abrir</button>
+  </DropdownMenu.Trigger>
+  <DropdownMenu.Content align="end">
+    <DropdownMenu.Item onSelect={() => router.push("/settings")}>
+      <Settings className="w-4 h-4" /> Settings
+    </DropdownMenu.Item>
+    <DropdownMenu.Separator />
+    <DropdownMenu.Item onSelect={() => {}}>Sign out</DropdownMenu.Item>
+  </DropdownMenu.Content>
+</DropdownMenu.Root>
+```
+
+**Usado en:** `Navbar` (menu de notificaciones, quick-create, user menu).
+
+### 9.11 Toast + ToastProvider (`Toast.tsx`)
+
+**Componente cliente** (Radix Toast). Sistema de notificaciones emergentes accesible.
+
+**Exports del archivo:**
+- `ToastProvider` — Provider que debe envolver la app en `layout.tsx`. Gestiona la cola de toasts activos.
+- `useToast()` — Hook que expone la funcion `toast()` para disparar toasts desde cualquier componente.
+
+**Variantes visuales:**
+
+| Variante | Icono | Color |
+|----------|-------|-------|
+| `success` | `CheckCircle` | `text-gh-success` (verde) |
+| `error` | `AlertCircle` | `text-gh-danger` (rojo) |
+| `info` | `Info` | `text-gh-accent` (azul) |
+
+**Ciclo de vida de un toast:**
+1. `useToast().toast({ title, variant })` crea un item con `id` unico y lo agrega al array.
+2. Radix anima la entrada (`slide-in-from-top-full`) y tras 5 segundos lo cierra automaticamente.
+3. Un `setTimeout` de 6.5 s lo elimina del array de React (margen para la animacion de salida).
+4. El usuario puede cerrarlo manualmente con el boton `X` o deslizarlo hacia la derecha (swipe).
+
+**Posicion:** `fixed bottom-4 right-4` (esquina inferior derecha, z-index 100).
+
+**Usado por:** `useToast()` hook — ver seccion 8.3.
+
 ---
 
-## 9. Componentes de Layout
+## 10. Componentes de Layout
 
-### 9.1 Navbar (`src/components/layout/Navbar.tsx`)
+### 10.1 Navbar (`src/components/layout/Navbar.tsx`)
 
-**Componente cliente** (usa `usePathname()` de Next.js).
+**Componente cliente** (usa `usePathname()`, `useRouter()`, `useTransition()`, `useDebounce()`, `useUserData()`).
 
-La barra de navegacion superior presente en todas las paginas. Replica la estructura de la navbar de GitHub.
+La barra de navegacion superior sticky presente en todas las paginas. Es el componente mas complejo del layout.
 
 **Estructura visual (izquierda a derecha):**
 
-1. **Logo de GitHub** (SVG del Octocat): Link a `/`
-2. **Barra de busqueda**: Input con icono de lupa y placeholder "Type / to search" (visual, no funcional)
-3. **Links de navegacion**: Dashboard, Repository, Settings
-   - El link activo se destaca con fondo `gh-btn-bg` y texto blanco
-   - Determinado comparando `pathname` con cada `href`
-4. **Campana de notificaciones**: Con indicador azul (punto)
-5. **Boton de crear** (+): Con chevron desplegable (visual)
-6. **Avatar de usuario**: Con chevron desplegable, link a `/settings`
+1. **Logo "DevHub"**: Link a `/`
+2. **Busqueda global** (funcional):
+   - Input con `useDebounce(query, 200)` para esperar 200 ms tras el ultimo keystroke
+   - `useTransition` marca el calculo de resultados como no urgente (React prioriza el keystroke primero)
+   - Dropdown de resultados con `role="listbox"` que muestra hasta 5 repos coincidentes por nombre o descripcion
+   - Boton `X` para limpiar; `Escape` cierra el dropdown
+   - Click en un resultado navega a `/${repo.owner}/${repo.name}` y limpia el query
+3. **Links de navegacion**: Dashboard, Explore, Repository, Settings
+   - El link activo usa `pathname.startsWith(href)` para resaltar correctamente rutas anidadas
+4. **Campana de notificaciones** (`DropdownMenu.Root`):
+   - Badge azul con `unreadCount` del `UserDataContext`
+   - Panel de 320px con las ultimas 5 notificaciones; las no leidas tienen fondo `accent/5` y un punto azul
+   - Boton "Marcar todo como leido" llama a `markAllNotificationsRead()`
+   - Click en un item llama a `markNotificationRead(id)` y navega a `n.href`
+   - Link "Ver todas" navega a `/notifications`
+5. **Quick create** (`+` + chevron, `DropdownMenu.Root`): opciones para New repository, New pull request, New issue
+6. **User menu** (avatar + chevron, `DropdownMenu.Root`): header con nombre/username, Your repositories, Settings, Sign out
 
 **Dependencias:**
-- Importa `currentUser` de `data/users.ts`
-- Usa `Avatar` de `components/ui/Avatar`
-- Usa iconos `Search`, `Bell`, `Plus`, `ChevronDown` de `lucide-react`
+- `useUserData()` — notificaciones, unreadCount, markNotificationRead, markAllNotificationsRead
+- `useDebounce()` — debounce del input de busqueda
+- `DropdownMenu` — los tres menus del lado derecho
+- `Avatar` de `components/ui/Avatar`
+- `repositories` de `data/repos.ts` para filtrar en busqueda
 
-### 9.2 Root Layout (`src/app/layout.tsx`)
+### 10.2 Root Layout (`src/app/layout.tsx`)
 
 Layout raiz de la aplicacion que envuelve todas las paginas.
 
-**Estructura:**
+**Estructura con providers:**
 ```
 <html lang="es">
   <body>
-    <Navbar />              ← Siempre visible
-    <main>                  ← Contenedor max-w-7xl centrado, px-4 py-6
-      {children}            ← Contenido de la pagina
-    </main>
+    <ToastProvider>          ← Radix Toast (notificaciones emergentes)
+      <SecurityProvider>     ← TTL de verificacion de password
+        <FavoritesProvider>  ← Set de repos favoritos
+          <VisibilityProvider> ← Overrides de visibilidad
+            <UserDataProvider> ← Store unificado de datos mutables
+              <Navbar />       ← Sticky top, siempre visible
+              <main>           ← max-w-7xl centrado, px-4 py-6
+                {children}
+              </main>
+            </UserDataProvider>
+          </VisibilityProvider>
+        </FavoritesProvider>
+      </SecurityProvider>
+    </ToastProvider>
   </body>
 </html>
 ```
@@ -675,7 +962,7 @@ Layout raiz de la aplicacion que envuelve todas las paginas.
 - Titulo: "GitHub UX Improved"
 - Descripcion: "GitHub clone with UX improvements - Proyecto Interfaces"
 
-### 9.3 Settings Layout (`src/app/settings/layout.tsx`)
+### 10.3 Settings Layout (`src/app/settings/layout.tsx`)
 
 Layout anidado para las paginas de configuracion. Agrega un sidebar a la izquierda.
 
@@ -689,7 +976,7 @@ Layout anidado para las paginas de configuracion. Agrega un sidebar a la izquier
 </div>
 ```
 
-### 9.4 SettingsSidebar (`src/components/settings/SettingsSidebar.tsx`)
+### 10.4 SettingsSidebar (`src/components/settings/SettingsSidebar.tsx`)
 
 **Componente cliente** (usa `usePathname()`, consume `SecurityContext`).
 
@@ -709,7 +996,7 @@ Las entradas placeholder (`Appearance`, `Accessibility`, `Notifications`) fueron
 
 1. Si `useSecurity().isVerified === false`: al hacer click se abre un `Modal` que pide la contraseña. Al verificar correctamente (cualquier contraseña no vacia es valida en el mock) se llama a `verify()` del contexto, que setea `verifiedUntil = Date.now() + 30 min` en `localStorage`, y se navega a la ruta.
 2. Si `useSecurity().isVerified === true`: el modal se salta y se navega directo. Un badge verde `ShieldCheck · Verificado · N min` aparece en el sidebar indicando cuanto tiempo queda de sesion verificada.
-3. **Importante:** la verificacion tambien se aplica si el usuario llega por URL directa (`http://localhost:3000/settings/tokens`); el `SecurityGate` (seccion 8.8) bloquea el contenido de la pagina.
+3. **Importante:** la verificacion tambien se aplica si el usuario llega por URL directa (`http://localhost:3000/settings/tokens`); el `SecurityGate` (seccion 9.9) bloquea el contenido de la pagina.
 
 **Elementos especiales:**
 - Los items destacados tienen texto azul (`text-gh-accent`) cuando no estan activos y un badge "Quick"
@@ -718,7 +1005,7 @@ Las entradas placeholder (`Appearance`, `Accessibility`, `Notifications`) fueron
 
 ---
 
-## 10. Vista 1: Home Dashboard - Mejora 1
+## 11. Vista 1: Home Dashboard - Mejora 1
 
 **Ruta:** `/`
 **Archivo:** `src/app/page.tsx`
@@ -801,7 +1088,7 @@ data/users.ts ─────────→ Sidebar (currentUser avatar, nombre
 
 ---
 
-## 11. Vista 2: Settings - Mejora 2
+## 12. Vista 2: Settings - Mejora 2
 
 **Rutas:** `/settings`, `/settings/tokens`, `/settings/ssh-keys`
 
@@ -812,18 +1099,21 @@ En GitHub real, los Personal Access Tokens estan en Settings > Developer Setting
 ### Pagina principal (`/settings`)
 
 **Archivo:** `src/app/settings/page.tsx`
-**Tipo:** Server Component
+**Tipo:** Client Component (`"use client"`)
 
 **Estructura:**
 - Titulo "Profile Settings"
-- Card con avatar y datos del usuario actual
+- **Formulario de perfil editable** (Mejora: antes era solo lectura):
+  - Campos: Display Name, Bio, Location, Email con validacion inline
+  - Boton "Save changes" con estado loading (spinner) y toast de exito al guardar
+  - Llama a `updateProfile(partial)` del `UserDataContext` para persistir en `localStorage`
 - Grid de 2 cards de acceso rapido:
   - **Access Tokens**: Icono Key, descripcion, conteo de tokens activos (verde), link a `/settings/tokens`
   - **SSH Keys**: Icono Shield, descripcion, conteo de keys, link a `/settings/ssh-keys`
 
 ### Proteccion de rutas sensibles: SecurityGate
 
-Las rutas `/settings/tokens` y `/settings/ssh-keys` estan **envueltas en `<SecurityGate>`** (ver seccion 8.9). El gate consulta `SecurityContext` para determinar si la sesion esta verificada:
+Las rutas `/settings/tokens` y `/settings/ssh-keys` estan **envueltas en `<SecurityGate>`** (ver seccion 9.9). El gate consulta `SecurityContext` para determinar si la sesion esta verificada:
 
 - **Por URL directa** (`http://localhost:3000/settings/tokens` en una pestaña nueva, bookmark, link compartido): el contenido se renderiza borroso (`opacity-20 blur-sm`) y aparece un modal pidiendo contraseña.
 - **Por click desde el sidebar**: si ya hay sesion verificada, el sidebar salta el prompt y navega directo. Si no, abre su propio modal de password (con la misma logica) antes de navegar.
@@ -894,7 +1184,7 @@ data/sshKeys.ts ──→ useState (keys) ──→ Lista de keys
 
 ---
 
-## 12. Vista 3: Repositorio - Mejoras 3 y 4
+## 13. Vista 3: Repositorio - Mejoras 3 y 4
 
 **Ruta:** `/:user/:repo` (e.g., `/javier-lopez/proyecto-interfaces`)
 **Archivo:** `src/app/[user]/[repo]/page.tsx`
@@ -921,20 +1211,24 @@ Se busca el repositorio en `data/repos.ts` y los archivos en `data/files.ts`. Si
 | Estado | Tipo | Proposito |
 |--------|------|-----------|
 | `activeTab` | `string` | Tab activa ("code", "issues", "pulls", "actions") |
+| `showIssueModal` | `boolean` | Visibilidad del modal para crear nuevo issue |
+| `newIssueTitle` / `newIssueBody` | `string` | Campos del formulario de nuevo issue |
+| `issueFilter` | `"open" \| "closed"` | Filtro de estado en tab Issues |
 
 ### Estructura de la pagina
 
 ```
 ┌──────────────────────────────────────────────────┐
 │  RepoHeader                                       │
-│  owner/name  [Public] [Make private]  [Star] [Fork]│
+│  owner/name  [Public] [Make private]  [Star] [Watch] [Fork]│
 ├──────────────────────────────────────────────────┤
-│  [Code]  [Issues 3]  [Pull Requests 2]  [Actions] │
+│  [Code]  [Issues N]  [Pull Requests N]  [Actions] │
 ├──────────────────────────────────────────────────┤
 │  Tab content:                                     │
-│  - Code → FileBrowser + ReadmePreview             │
-│  - Pulls → Lista de PRs del repo                  │
-│  - Issues/Actions → Placeholder                   │
+│  - Code   → FileBrowser + ReadmePreview           │
+│  - Issues → Lista open/closed + modal new issue   │
+│  - Pulls  → Lista de PRs del repo                 │
+│  - Actions → Lista de workflow runs con estados   │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -956,38 +1250,65 @@ Se busca el repositorio en `data/repos.ts` y los archivos en `data/files.ts`. Si
 | `showConfirm` | `boolean` | Modal de confirmacion |
 | `starred` | `boolean` | Estado de estrella |
 
+**Acciones funcionales (via UserDataContext):**
+- **Fork**: `toggleFork(repoKey)` del `UserDataContext`. El boton refleja si el usuario ya hizo fork (fondo distinto). Muestra toast de feedback.
+- **Watch**: `toggleWatch(repoKey)`. Mismo patron que Fork.
+- **Visibilidad** (Mejora 3): Modal de confirmacion; al confirmar actualiza `VisibilityContext` y muestra toast.
+- **Star**: estado local `starred` con contador.
+
 **Elementos visuales:**
 - Nombre del repo con formato `owner/name`
 - Badge de visibilidad (icono candado o globo)
-- **Boton "Make private" / "Make public"** (Mejora 3): Al hacer clic, abre un modal de confirmacion con advertencia contextual. Al confirmar, cambia el estado local.
-- Botones Star (con contador que incrementa), Fork (con contador), Watch
+- **Boton "Make private" / "Make public"** (Mejora 3): Al hacer clic, abre un modal de confirmacion con advertencia contextual.
+- Botones Star (contador), Watch (funcional via Context), Fork (funcional via Context)
 - Descripcion del repo
 - Callout azul explicando la mejora UX
 
+#### Tab Issues
+
+**Archivo:** `src/app/[user]/[repo]/issues/page.tsx`
+
+Lista interactiva de issues del repositorio.
+
+**Estado:**
+- `filter`: `"open" | "closed"` — alterna entre issues abiertos y cerrados
+- `showModal`: booleano para modal de creacion
+
+**Funcionalidades:**
+1. **Listado**: Filtra `UserDataContext.issues` por `repoOwner/repoName` y `status`, muestra titulo, labels (Badge), autor, fecha relativa
+2. **Cerrar issue**: Boton en cada fila llama a `closeIssue(id)` del contexto
+3. **Crear issue**: Boton "New Issue" abre un modal con campos Title y Body; al guardar llama a `addIssue({...})` del contexto
+4. **Detalle**: Click en el titulo navega a `/:user/:repo/issues/:id`
+
+**Ruta de detalle** (`/:user/:repo/issues/:id`): muestra el titulo, body, labels, estado, y la lista de comentarios del issue. Incluye formulario para agregar comentario (llama a `addCommentToIssue`).
+
+#### Tab Actions
+
+Renderizado directamente en `page.tsx` del repo (no es un componente separado).
+
+- Lista `UserDataContext.workflowRuns` filtrados por `repoOwner/repoName`
+- Icono de estado:
+  - `success` → `CheckCircle` verde
+  - `failure` → `XCircle` rojo
+  - `running` → `Loader2` girando (animate-spin)
+  - `cancelled` → `AlertCircle` gris
+- Muestra: nombre del workflow, rama, SHA del commit, autor, duracion (o "En progreso"), tiempo relativo
+
 #### FileBrowser (`src/components/repo/FileBrowser.tsx`)
 
-**Componente cliente** — implementa la **Mejora 4**.
+**Componente cliente** — implementa la **Mejora 4**. Optimizado con `React.memo`.
 
 | Prop | Tipo |
 |------|------|
 | `files` | `FileEntry[]` |
 
-**Estado local:**
+**Fila (`FileRow`):** Componente interno envuelto en `React.memo`. El handler `handleFolderDownload` esta en `useCallback` para que `memo` no se invalide en cada render del padre.
 
-| Estado | Tipo | Proposito |
-|--------|------|-----------|
-| `toast` | `string \| null` | Mensaje de toast de descarga |
+**Mejoras de performance:**
+- `FileRow` → `React.memo`: solo re-renderiza si cambian sus props
+- `handleFolderDownload` → `useCallback`: referencia estable entre renders
 
-**Elementos visuales:**
-- **Selector de branch**: Boton "main" con icono GitBranch (visual)
-- **Boton "Code"**: Boton primario verde con icono Download (visual)
-- **Tabla de archivos**: Header con info del ultimo commit
-- Cada fila (`FileRow`):
-  - Icono carpeta (azul) o archivo (gris)
-  - Nombre
-  - **Boton de descarga en carpetas** (Mejora 4): Aparece con `opacity-0 group-hover:opacity-100` al pasar el mouse. Al hacer clic, muestra un toast "Downloading [folder]/ as ZIP..." que desaparece despues de 3 segundos.
-  - Mensaje del ultimo commit
-  - Tiempo relativo
+**Toast migrado a global:** usa `useToast()` en vez de estado local `toast: string | null`. Al hacer clic en el icono de descarga de una carpeta, llama a `toast({ title: "Descargando [folder]/ como ZIP…", variant: "info" })`.
 
 Los archivos se ordenan: carpetas primero, luego archivos, ambos alfabeticamente.
 
@@ -1009,14 +1330,19 @@ Renderiza un README hardcodeado con HTML estilizado (sin parser de Markdown). Co
 ```
 URL params ([user], [repo])
     │
-    ├──→ data/repos.ts ──→ find() ──→ RepoHeader (repo data)
-    ├──→ data/files.ts ──→ lookup ──→ FileBrowser (file tree)
-    └──→ data/pullRequests.ts ──→ filter() ──→ PR list (tab "pulls")
+    ├──→ data/repos.ts ──────────→ find() ──→ RepoHeader (repo data)
+    ├──→ data/files.ts ──────────→ lookup ──→ FileBrowser (file tree)
+    ├──→ data/pullRequests.ts ───→ filter() → PR list (tab "pulls")
+    ├──→ UserDataContext.issues ─→ filter() → Tab Issues
+    └──→ UserDataContext.workflowRuns → filter() → Tab Actions
+
+UserDataContext ←──────────────────→ RepoHeader (fork, watch, visibility)
+                                    ← Issues tab (addIssue, closeIssue)
 ```
 
 ---
 
-## 13. Vista 4: Pull Request - Mejora 5
+## 14. Vista 4: Pull Request - Mejora 5
 
 **Ruta:** `/:user/:repo/pull/:id` (e.g., `/javier-lopez/proyecto-interfaces/pull/1`)
 **Archivo:** `src/app/[user]/[repo]/pull/[id]/page.tsx`
@@ -1135,7 +1461,7 @@ Esta misma funcion se repite en PRTimeline y CommitList (internamente en cada co
 
 #### DiffViewer (`src/components/pr/DiffViewer.tsx`)
 
-**Componente cliente.**
+**Componente cliente** (`"use client"`). Optimizado con `React.memo`.
 
 | Prop | Tipo |
 |------|------|
@@ -1143,12 +1469,13 @@ Esta misma funcion se repite en PRTimeline y CommitList (internamente en cada co
 
 **Estructura:**
 1. **Resumen**: Cantidad de archivos, total de adiciones (verde) y eliminaciones (rojo)
-2. **Por cada archivo** (componente interno `DiffFileView`):
+2. **Por cada archivo** (componente interno `DiffFileView`, envuelto en `React.memo`):
    - Header clickeable para expandir/colapsar (estado local `expanded`)
    - Nombre del archivo, conteo +/-, mini barra visual de cambios
+   - El handler `onToggleReview` esta en `useCallback` para que `memo` no se invalide en el padre
    - Contenido del diff:
      - Header del hunk (fondo azul)
-     - Lineas con numeros (columna vieja, columna nueva)
+     - Lineas con numeros (columna vieja, columna nueva), keys estables basadas en contenido (no index)
      - Prefijo `+`/`-`/` ` segun tipo
      - Colores de fondo: verde translucido para adiciones, rojo translucido para eliminaciones
 
@@ -1181,28 +1508,36 @@ Lista de commits del PR. Cada fila:
 
 Ademas de PRTimeline, la tab de Conversation incluye:
 - **Cuerpo del PR**: Card con avatar del autor, header y cuerpo formateado (`whitespace-pre-wrap`)
-- **Boton de merge** (solo si status === "open"): Card con mensaje "This branch has no conflicts" y boton verde "Merge pull request"
+- **Boton de merge** (funcional, solo si status === "open"):
+  - Muestra un modal con selector de estrategia: **Merge commit**, **Squash and merge**, **Rebase and merge**
+  - Al confirmar, llama a `mergePR(pr.id)` del `UserDataContext` que guarda `prOverrides[id] = { status: "merged" }` en `localStorage`
+  - El estado del PR se lee via `getPRStatus(id)` que lee el override antes que el dato estatico
+  - `MergeDirectionBanner` recibe el estado actualizado y cambia su color de borde a morado (`gh-done`)
+  - El boton de merge desaparece tras hacer merge (status cambia a "merged")
 
 ### Flujo de datos
 
 ```
 URL params ([user], [repo], [id])
     │
-    └──→ data/pullRequests.ts ──→ find()
-              │
-              ├──→ PR header (title, status, author, createdAt)
-              ├──→ MergeDirectionBanner (headBranch, baseBranch, status)
+    ├──→ data/pullRequests.ts ──→ find() ──→ base del PR
+    ├──→ UserDataContext.getPRStatus(id) ──→ estado actual (puede estar sobreescrito)
+    │
+    └──→ PR renderizado:
+              ├──→ PR header (title, status efectivo, author, createdAt)
+              ├──→ MergeDirectionBanner (headBranch, baseBranch, status efectivo)
               ├──→ ReviewProgressBar (reviewers[])
               ├──→ PRTimeline (comments[])
               ├──→ CommitList (commits[])
               └──→ DiffViewer (diffFiles[])
 
+Merge → UserDataContext.mergePR(id) ──→ localStorage["gh-userdata"].prOverrides
 data/users.ts ──→ getUserAvatar() en ReviewProgressBar, PRTimeline, CommitList
 ```
 
 ---
 
-## 14. Flujo de Datos y Relaciones entre Componentes
+## 15. Flujo de Datos y Relaciones entre Componentes
 
 ### Diagrama general de dependencias
 
@@ -1212,25 +1547,28 @@ data/users.ts ──→ getUserAvatar() en ReviewProgressBar, PRTimeline, Commit
                     │ index.ts    │
                     └──────┬──────┘
                            │ (importado por todos)
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │ data/    │ │ lib/     │ │ comp/ui/ │
-        │ *.ts     │ │ utils.ts │ │ *.tsx    │
-        └────┬─────┘ └────┬─────┘ └────┬─────┘
-             │             │            │
-             │ (datos)     │ (helpers)  │ (primitivos)
-             ▼             ▼            ▼
+              ┌────────────┼──────────────┐
+              ▼            ▼              ▼
+        ┌──────────┐ ┌──────────────┐ ┌──────────┐
+        │ data/    │ │ lib/utils.ts │ │ comp/ui/ │
+        │ *.ts     │ │ lib/hooks/   │ │ *.tsx    │
+        └────┬─────┘ └──────┬───────┘ └────┬─────┘
+             │               │              │
+             │ (datos)       │ (helpers)    │ (primitivos)
+             ▼               ▼              ▼
     ┌─────────────────────────────────────────┐
     │ Componentes de dominio                   │
     │ (home/, settings/, repo/, pr/, layout/)  │
     └──────────────────┬──────────────────────┘
-                       │ consume / propaga state
+                       │ consume / muta state
                        ▼
-              ┌─────────────────┐         ┌──────────────────┐
-              │ context/        │◄────────│ localStorage     │
-              │ providers       │         │ (browser API)    │
-              └────────┬────────┘         └──────────────────┘
+    ┌─────────────────────────────────────────┐
+    │ context/ providers (4 providers)         │◄──── localStorage
+    │  FavoritesContext   (gh-favorites)        │     (browser API)
+    │  VisibilityContext  (gh-visibility)       │
+    │  SecurityContext    (gh-security-*)       │
+    │  UserDataContext    (gh-userdata)         │
+    └──────────────────┬──────────────────────┘
                        │
                        ▼
               ┌─────────────────┐
@@ -1241,10 +1579,11 @@ data/users.ts ──→ getUserAvatar() en ReviewProgressBar, PRTimeline, Commit
 
 ### Patron de datos
 
-1. **Datos estaticos** (`data/*.ts`) → importados directamente por paginas
-2. **Estado mutable local** → `useState` a nivel de pagina o componente, inicializado desde datos estaticos (formularios, modales, tabs activos)
-3. **Estado global** → `Context API` (`FavoritesContext`, `VisibilityContext`, `SecurityContext`) persistido en `localStorage`
-4. **Props drilling** → las paginas pasan datos a sus componentes hijos via props para todo lo que no es estado global
+1. **Datos estaticos** (`data/*.ts`) → importados directamente por paginas como constantes tipadas
+2. **Estado mutable local** → `useState` a nivel de pagina o componente, para formularios, modales y tabs activos
+3. **Estado global simple** → `FavoritesContext`, `VisibilityContext`, `SecurityContext` — un slice de datos cada uno, persistido via `useLocalStorage`
+4. **Estado global unificado** → `UserDataContext` — store con multiples slices (issues, PRs, notificaciones, forks, watches, perfil), todos bajo una sola clave `"gh-userdata"` en localStorage. Mutadores memoizados con `useCallback`.
+5. **Props drilling** → las paginas pasan datos a sus componentes hijos via props para todo lo que no requiere estado global
 
 ### Relacion componentes UI ← Componentes de dominio
 
@@ -1259,37 +1598,44 @@ data/users.ts ──→ getUserAvatar() en ReviewProgressBar, PRTimeline, Commit
 | `SecurityGate` | TokensPage, SSHKeysPage |
 | `Tabs` | Repo page, PR page |
 | `Toggle` | Disponible pero no usado directamente (el toggle de visibilidad usa Button + Modal) |
+| `DropdownMenu` | Navbar (notificaciones, quick-create, user menu) |
+| `Toast` / `useToast` | FileBrowser (descarga), RepoHeader (fork/watch), Issues page, PR page (merge) |
 
 ---
 
-## 15. Rutas de la Aplicacion
+## 16. Rutas de la Aplicacion
 
 | Ruta | Archivo | Tipo | Protegida | Descripcion |
 |------|---------|------|-----------|-------------|
 | `/` | `app/page.tsx` | Server | — | Home Dashboard (Mejora 1) |
 | `/explore` | `app/explore/page.tsx` | Server | — | Trending y tus repositorios |
-| `/settings` | `app/settings/page.tsx` | Server | — | Perfil + acceso rapido a tokens/keys |
+| `/notifications` | `app/notifications/page.tsx` | Client | — | Centro de notificaciones |
+| `/settings` | `app/settings/page.tsx` | Client | — | Perfil editable + acceso rapido a tokens/keys |
 | `/settings/tokens` | `app/settings/tokens/page.tsx` | Client | **Si** (SecurityGate) | Gestion de tokens (Mejora 2) |
 | `/settings/ssh-keys` | `app/settings/ssh-keys/page.tsx` | Client | **Si** (SecurityGate) | Gestion de SSH keys (Mejora 2) |
 | `/:user/:repo` | `app/[user]/[repo]/page.tsx` | Client | — | Vista de repositorio (Mejoras 3, 4) |
+| `/:user/:repo/issues` | `app/[user]/[repo]/issues/page.tsx` | Client | — | Lista de issues del repo |
+| `/:user/:repo/issues/:id` | `app/[user]/[repo]/issues/[id]/page.tsx` | Client | — | Detalle de un issue |
 | `/:user/:repo/pull/:id` | `app/[user]/[repo]/pull/[id]/page.tsx` | Client | — | Vista de PR (Mejora 5) |
 
-Las rutas marcadas como **protegidas** requieren confirmacion de password (modal del `SecurityGate`) tanto si se accede por click desde el sidebar como por URL directa. La verificacion dura 30 minutos via `SecurityContext` (ver seccion 16).
+Las rutas marcadas como **protegidas** requieren confirmacion de password (modal del `SecurityGate`) tanto si se accede por click desde el sidebar como por URL directa. La verificacion dura 30 minutos via `SecurityContext` (ver seccion 17).
 
 ### Rutas con datos mock disponibles
 
-- `/javier-lopez/proyecto-interfaces` — Repo con archivos, PRs, y todos los features
+- `/javier-lopez/proyecto-interfaces` — Repo principal (archivos, PRs, issues, workflow runs)
 - `/javier-lopez/algoritmos-avanzados` — Repo con PR #3
 - `/javier-lopez/api-rest-tareas` — Repo sin PRs
 - `/javier-lopez/notas-privadas` — Repo privado
 - `/javier-lopez/dotfiles` — Repo publico
 - `/javier-lopez/ml-clasificador` — Repo privado favorito
-- `/javier-lopez/proyecto-interfaces/pull/1` — PR abierto con diffs completos
+- `/javier-lopez/proyecto-interfaces/pull/1` — PR abierto con diffs completos (merge funcional)
 - `/javier-lopez/proyecto-interfaces/pull/2` — PR merged
+- `/javier-lopez/proyecto-interfaces/issues` — Lista de 3 issues con filtro open/closed
+- `/notifications` — Centro de notificaciones con 5 entradas (mix leidas/no leidas)
 
 ---
 
-## 16. Decisiones Tecnicas
+## 17. Decisiones Tecnicas
 
 ### Solo tema oscuro
 
@@ -1330,18 +1676,73 @@ El `ReadmePreview` usa HTML hardcodeado con clases de Tailwind en lugar de un pa
 
 ### Estado global con Context + localStorage
 
-El proyecto usa **tres React Contexts** (en `src/context/`) para estado que necesita sobrevivir navegacion. Toda la persistencia es en `localStorage` (no sessionStorage, no backend). Los providers se anidan en `src/app/layout.tsx`.
+El proyecto usa **cuatro React Contexts** (en `src/context/`) para estado que necesita sobrevivir navegacion. Toda la persistencia es en `localStorage` (no sessionStorage, no backend). Los providers se anidan en `src/app/layout.tsx`.
 
 | Context | Clave localStorage | Persiste | Consumido por |
 |---------|--------------------|----------|---------------|
 | `FavoritesContext` | `gh-favorites` | Set de `"owner/name"` | `FavoriteRepos`, `MostUsedRepos`, `RepoHeader` |
 | `VisibilityContext` | `gh-visibility` | Map de visibilidad por repo | `FavoriteRepos`, `MostUsedRepos`, `RepoHeader` |
-| `SecurityContext` | `gh-security-verified-until` | Timestamp epoch ms hasta cuando dura la sesion verificada (TTL 30 min) | `SecurityGate`, `SettingsSidebar` |
+| `SecurityContext` | `gh-security-verified-until` | Timestamp epoch ms (TTL 30 min) | `SecurityGate`, `SettingsSidebar` |
+| `UserDataContext` | `gh-userdata` | Objeto con slices: profile, issues, workflowRuns, notifications, forks, watches, prOverrides | Navbar, RepoHeader, Issues page, PR page, Notifications page, Settings page |
 
-Justificacion: el estado global es minimo (3 contextos pequeños), por lo que **no introdujimos Redux ni Zustand**. Context API es suficiente y no agrega dependencias.
+Justificacion: el estado global de los primeros tres contextos es minimo (un slice simple cada uno); `UserDataContext` centraliza todos los datos mutables del usuario para no multiplicar providers. **No se introdujo Redux ni Zustand** — Context API con `useCallback`/`useMemo` es suficiente para la escala de este prototipo.
 
-**Por que `localStorage` y no `sessionStorage`:** queremos que los favoritos y la visibilidad sobrevivan al cierre del navegador. Para la verificacion de seguridad, `localStorage` se combina con un timestamp TTL (30 min) que el contexto re-evalua cada 5s, replicando el comportamiento "sudo" de GitHub real (verificas una vez y dura un rato, no toda la vida).
+**Por que `localStorage` y no `sessionStorage`:** los favoritos, visibilidad y datos del usuario deben sobrevivir al cierre del navegador. La verificacion de seguridad combina `localStorage` con un timestamp TTL (30 min) que el contexto re-evalua cada 5s, replicando el comportamiento "sudo" de GitHub real.
 
 ### Proteccion de rutas sin backend
 
 Las rutas que muestran credenciales (`/settings/tokens`, `/settings/ssh-keys`) estan envueltas en `<SecurityGate>` (`src/components/ui/SecurityGate.tsx`). Esto impide que un usuario acceda al contenido por URL directa o bookmark sin pasar por el modal de password. El gate consume `SecurityContext`, por lo que **la verificacion realizada desde el sidebar tambien aplica al gate de ruta** (y viceversa).
+
+### Radix UI para primitivos accesibles
+
+Se migro de componentes custom simples a **Radix UI** para los cinco primitivos interactivos del proyecto:
+
+| Primitivo | Antes | Ahora (Radix) | Que gana |
+|-----------|-------|---------------|----------|
+| `Modal` | Dialog manual | `@radix-ui/react-dialog` | Focus trap, Escape, scroll lock, `aria-modal` automaticos |
+| `Tabs` | Div + clases | `@radix-ui/react-tabs` | Navegacion ←/→/Home/End, `aria-selected` automatico |
+| `Toggle` | Input checkbox | `@radix-ui/react-switch` | `Space` key, `aria-checked` automatico |
+| `DropdownMenu` | No existia | `@radix-ui/react-dropdown-menu` | ↑/↓/Escape, portal fuera del DOM padre, `aria-expanded` |
+| `Toast` | No existia | `@radix-ui/react-toast` | `aria-live`, swipe gesture, animaciones WAAPI |
+
+**Justificacion:** los atributos ARIA y la gestion de foco son criticos para accesibilidad y requieren decenas de lineas de codigo correcto. Radix UI los implementa correctamente y sin opiniones de estilo (headless), por lo que el equipo mantiene el control visual via Tailwind.
+
+### Consolidacion en UserDataContext
+
+En lugar de crear un provider por cada feature nuevo (`IssuesContext`, `NotificationsContext`, `ForksContext`…), todos los datos mutables del usuario se unificaron en un unico **`UserDataContext`** bajo la clave `"gh-userdata"`.
+
+**Ventajas:**
+- El arbol de providers en `layout.tsx` no crece con cada feature
+- Un solo `useLocalStorage` call en vez de N calls separados (menor superficie de sincronizacion)
+- Los mutadores (`addIssue`, `mergePR`, `toggleFork`…) son `useCallback` para que los componentes que los reciben via props no se re-rendericen innecesariamente
+- `safeStore = { ...defaultStore, ...store }` garantiza que si se agrega un slice nuevo, los usuarios con `localStorage` antiguo no crashean
+
+**Cuando NO usar `UserDataContext`:** estado que es verdaderamente local a un componente (si un modal esta abierto, el valor de un input) sigue en `useState` local.
+
+### React.memo + useCallback para estabilidad referencial
+
+Se aplico `React.memo` a componentes puros que reciben props estables y pueden renderizarse muchas veces:
+
+- `FileRow` (en `FileBrowser`): puede haber N filas; sin memo re-renderiza todas al cambiar cualquier estado del padre
+- `DiffFileView` (en `DiffViewer`): los diffs pueden tener cientos de lineas; memo evita O(n) re-renders al expandir/colapsar un archivo
+
+Para que `memo` funcione, los handlers que se pasan como props deben tener **referencia estable**:
+```typescript
+// Sin useCallback: nueva referencia en cada render → memo queda inutil
+const handleDownload = () => { ... };
+
+// Con useCallback: misma referencia mientras las dependencias no cambien
+const handleDownload = useCallback(() => { ... }, [toast]);
+```
+
+**Regla aplicada en el proyecto:** todo handler que pasa como prop a un componente `React.memo`-do esta envuelto en `useCallback`.
+
+### useToast como hook global (sin prop-drilling)
+
+El patron antiguo guardaba un `string | null` en `useState` local de cada componente para mostrar un toast. El nuevo patron:
+
+1. `ToastProvider` en `layout.tsx` mantiene la cola de toasts activos
+2. Cualquier componente llama a `useToast().toast({ title, variant })` sin necesitar props de los padres
+3. Radix gestiona el ciclo de vida (open → auto-close 5 s → animate-out)
+
+**Por que no Context manual:** Radix `@radix-ui/react-toast` ya implementa `aria-live="polite"`, el swipe gesture, y la logica de auto-dismiss. Construirlo desde cero seria duplicar trabajo sin ganar nada.

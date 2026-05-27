@@ -83,6 +83,63 @@ export interface PRComment {
   type: "comment" | "review" | "system";
 }
 
+export interface IssueComment {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface Issue {
+  id: number;
+  repoOwner: string;
+  repoName: string;
+  title: string;
+  body: string;
+  status: "open" | "closed";
+  author: string;
+  labels: string[];
+  createdAt: string;
+  updatedAt: string;
+  comments: IssueComment[];
+}
+
+export interface WorkflowRun {
+  id: string;
+  repoOwner: string;
+  repoName: string;
+  workflowName: string;
+  status: "success" | "failure" | "running" | "cancelled";
+  branch: string;
+  commit: string;
+  commitSha: string;
+  author: string;
+  /** Duración en segundos (0 si está running) */
+  duration: number;
+  triggeredAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  type: "pr" | "issue" | "mention" | "ci";
+  title: string;
+  body: string;
+  repoOwner: string;
+  repoName: string;
+  href: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface UserProfile {
+  username: string;
+  displayName: string;
+  avatarUrl: string;
+  bio: string;
+  location?: string;
+  email?: string;
+}
+
 export interface PersonalAccessToken {
   id: string;
   name: string;

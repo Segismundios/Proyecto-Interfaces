@@ -5,6 +5,7 @@ import { FavoritesProvider } from "@/context/FavoritesContext";
 import { VisibilityProvider } from "@/context/VisibilityContext";
 import { SecurityProvider } from "@/context/SecurityContext";
 import { ToastProvider } from "@/components/ui/Toast";
+import { UserDataProvider } from "@/context/UserDataContext";
 
 export const metadata: Metadata = {
   title: "DevHub",
@@ -20,14 +21,16 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <ToastProvider>
-          <FavoritesProvider>
-            <VisibilityProvider>
-              <SecurityProvider>
-                <Navbar />
-                <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
-              </SecurityProvider>
-            </VisibilityProvider>
-          </FavoritesProvider>
+          <UserDataProvider>
+            <FavoritesProvider>
+              <VisibilityProvider>
+                <SecurityProvider>
+                  <Navbar />
+                  <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
+                </SecurityProvider>
+              </VisibilityProvider>
+            </FavoritesProvider>
+          </UserDataProvider>
         </ToastProvider>
       </body>
     </html>

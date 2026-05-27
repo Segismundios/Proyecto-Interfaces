@@ -1,3 +1,5 @@
+// Client component: formulario con useState (CRUD de SSH keys) + validación
+// de formato (debe empezar con ssh-rsa/ssh-ed25519) requiere browser.
 "use client";
 
 import { useState } from "react";

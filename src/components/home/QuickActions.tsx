@@ -1,3 +1,5 @@
+// Client component: useState para abrir/cerrar modales de "New Repo" y
+// "New PR"; los handlers de formulario y timeouts requieren browser.
 "use client";
 
 import { useState } from "react";

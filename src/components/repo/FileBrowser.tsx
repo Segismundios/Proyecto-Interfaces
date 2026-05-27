@@ -1,3 +1,5 @@
+// Client component: usa URL.createObjectURL (browser API) para la descarga
+// por carpeta (Mejora 4) y useState para navegar dentro de carpetas.
 "use client";
 
 import { useState } from "react";

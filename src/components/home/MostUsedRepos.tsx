@@ -1,3 +1,5 @@
+// Client component: consume FavoritesContext para mostrar/toggle el estado
+// de star en tiempo real sin re-fetch; requiere contexto de browser.
 "use client";
 
 import Link from "next/link";

@@ -1,3 +1,5 @@
+// Client component: consume SecurityContext (localStorage TTL) para bloquear
+// rutas /settings/tokens y /settings/ssh-keys hasta verificación.
 "use client";
 
 import { useState } from "react";

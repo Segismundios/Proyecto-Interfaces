@@ -1,3 +1,5 @@
+// Client component: useParams (hook de navegación) + useState para el tab
+// activo del repo; ambos requieren router context y estado de browser.
 "use client";
 
 import { useParams } from "next/navigation";

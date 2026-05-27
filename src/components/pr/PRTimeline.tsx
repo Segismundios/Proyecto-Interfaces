@@ -21,7 +21,7 @@ export function PRTimeline({ comments }: PRTimelineProps) {
 
   return (
     <div className="space-y-4">
-      {comments.map((comment, i) => {
+      {comments.map((comment) => {
         const icon =
           comment.type === "review" ? (
             <CheckCircle className="w-4 h-4 text-gh-success" />
@@ -32,7 +32,7 @@ export function PRTimeline({ comments }: PRTimelineProps) {
           );
 
         return (
-          <div key={i} className="flex gap-3">
+          <div key={`${comment.author}-${comment.createdAt}`} className="flex gap-3">
             <Avatar src={getUserAvatar(comment.author)} alt={comment.author} size="md" />
             <div className="flex-1 border border-gh-border rounded-md">
               <div className="flex items-center gap-2 px-4 py-2 bg-gh-canvas-subtle border-b border-gh-border rounded-t-md">

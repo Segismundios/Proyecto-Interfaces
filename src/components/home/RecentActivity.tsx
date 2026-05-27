@@ -1,3 +1,5 @@
+// Client component: useState para el botón "Show more" que expande la lista
+// de PRs recientes sin re-render del servidor.
 "use client";
 
 import { useState } from "react";

@@ -1,3 +1,5 @@
+// Client component: useParams + useState para tabs y fileReviews (toggle
+// "Reviewed" por archivo); requiere estado reactivo en el browser.
 "use client";
 
 import { useState } from "react";

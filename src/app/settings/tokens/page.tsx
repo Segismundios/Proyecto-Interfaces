@@ -1,3 +1,5 @@
+// Client component: formulario con useState (CRUD de tokens) + loading state
+// + validación inline; toda la interactividad requiere browser.
 "use client";
 
 import { useState } from "react";

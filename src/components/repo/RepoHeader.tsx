@@ -1,3 +1,5 @@
+// Client component: useState para el modal de confirmación de visibilidad
+// y consume FavoritesContext/VisibilityContext (estado reactivo del browser).
 "use client";
 
 import { useState } from "react";

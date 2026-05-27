@@ -1,3 +1,5 @@
+// Client component: consume FavoritesContext (toggle/read de favoritos)
+// que vive en el cliente; requiere eventos de browser para el star button.
 "use client";
 
 import Link from "next/link";

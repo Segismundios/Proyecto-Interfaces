@@ -85,7 +85,7 @@ export function SettingsSidebar() {
             );
 
             return (
-              <li key={item.label}>
+              <li key={item.href}>
                 {item.protected ? (
                   <button className={baseClass} onClick={() => handleProtectedClick(item.href)}>
                     {indicator}

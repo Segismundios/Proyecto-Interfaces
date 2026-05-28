@@ -220,7 +220,11 @@ export default function PullRequestPage() {
                           Merging can be performed automatically.
                         </p>
                       </div>
-                      <div className="flex items-center gap-0">
+                      <div
+                        className="inline-flex shadow-sm"
+                        role="group"
+                        aria-label="Merge actions"
+                      >
                         <Button
                           variant="primary"
                           onClick={() => setShowMergeModal(true)}
@@ -231,10 +235,10 @@ export default function PullRequestPage() {
                         </Button>
                         <Button
                           variant="primary"
-                          size="sm"
-                          className="rounded-l-none border-l border-gh-btn-primary-hover px-2"
                           onClick={() => setShowMergeModal(true)}
+                          className="rounded-l-none -ml-px border-l-white/25 px-2.5"
                           aria-label="Seleccionar estrategia de merge"
+                          aria-haspopup="menu"
                         >
                           <ChevronDown className="w-4 h-4" />
                         </Button>

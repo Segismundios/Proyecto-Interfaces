@@ -1,4 +1,4 @@
-import { ArrowRight, GitBranch, Info } from "lucide-react";
+import { MoveRight, GitBranch, Info } from "lucide-react";
 
 interface MergeDirectionBannerProps {
   headBranch: string;
@@ -28,29 +28,29 @@ export function MergeDirectionBanner({ headBranch, baseBranch, status }: MergeDi
         {statusLabel[status]} <span className="text-gh-fg">{headBranch}</span> →{" "}
         <span className="text-gh-fg">{baseBranch}</span>
       </p>
-      <div className="flex items-center justify-center gap-4 flex-wrap">
-        {/* Head branch (source) */}
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] uppercase tracking-wider text-gh-fg-muted">Desde</span>
-          <div className="flex items-center gap-2 bg-gh-accent/20 border border-gh-accent/40 rounded-lg px-4 py-2">
-            <GitBranch className="w-4 h-4 text-gh-accent" />
-            <span className="text-sm font-mono font-semibold text-gh-accent">{headBranch}</span>
-          </div>
+      <div className="grid grid-cols-[auto_auto_auto] justify-center items-center gap-x-4 gap-y-1">
+        {/* Row 1: labels (sólo encima de los botones; celda central vacía) */}
+        <span className="text-[10px] uppercase tracking-wider text-gh-fg-muted text-center">
+          Desde
+        </span>
+        <span aria-hidden="true" />
+        <span className="text-[10px] uppercase tracking-wider text-gh-fg-muted text-center">
+          Hacia
+        </span>
+
+        {/* Row 2: botón origen + flecha + botón destino (alineados verticalmente entre sí) */}
+        <div className="flex items-center gap-2 bg-gh-accent/20 border border-gh-accent/40 rounded-lg px-4 py-2">
+          <GitBranch className="w-4 h-4 text-gh-accent" />
+          <span className="text-sm font-mono font-semibold text-gh-accent">{headBranch}</span>
         </div>
 
-        {/* Arrow */}
-        <div className="flex items-center" aria-hidden="true">
-          <div className="w-12 h-0.5 bg-gh-fg-muted" />
-          <ArrowRight className="w-5 h-5 text-gh-fg-muted -ml-1" />
+        <div className="flex items-center justify-center" aria-hidden="true">
+          <MoveRight className="w-8 h-8 text-gh-fg-muted" />
         </div>
 
-        {/* Base branch (target) */}
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] uppercase tracking-wider text-gh-fg-muted">Hacia</span>
-          <div className="flex items-center gap-2 bg-gh-success/20 border border-gh-success/40 rounded-lg px-4 py-2">
-            <GitBranch className="w-4 h-4 text-gh-success" />
-            <span className="text-sm font-mono font-semibold text-gh-success">{baseBranch}</span>
-          </div>
+        <div className="flex items-center gap-2 bg-gh-success/20 border border-gh-success/40 rounded-lg px-4 py-2">
+          <GitBranch className="w-4 h-4 text-gh-success" />
+          <span className="text-sm font-mono font-semibold text-gh-success">{baseBranch}</span>
         </div>
       </div>
 

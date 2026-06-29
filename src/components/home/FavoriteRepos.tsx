@@ -2,8 +2,9 @@
 // que vive en el cliente; requiere eventos de browser para el star button.
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Star, Lock, Globe } from "lucide-react";
+import { Star, Lock, Globe, ChevronDown, ChevronUp } from "lucide-react";
 import { Repository } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -14,6 +15,10 @@ interface FavoriteReposProps {
   repos: Repository[];
 }
 
+// HALLAZGO E3 (Salinas): los favoritos se acumulaban infinito hacia abajo.
+// Mostramos un máximo colapsado con "ver más" para acotar el alto vertical.
+const COLLAPSED_LIMIT = 4;
+
 function starCount(repo: Repository, isFavorite: (o: string, n: string) => boolean) {
   return repo.stars - (repo.isFavorite ? 1 : 0) + (isFavorite(repo.owner, repo.name) ? 1 : 0);
 }
@@ -21,7 +26,11 @@ function starCount(repo: Repository, isFavorite: (o: string, n: string) => boole
 export function FavoriteRepos({ repos }: FavoriteReposProps) {
   const { isFavorite } = useFavorites();
   const { getVisibility } = useVisibility();
+  const [expanded, setExpanded] = useState(false);
   const favorites = repos.filter((r) => isFavorite(r.owner, r.name));
+  const canExpand = favorites.length > COLLAPSED_LIMIT;
+  const visibleFavorites =
+    expanded || !canExpand ? favorites : favorites.slice(0, COLLAPSED_LIMIT);
 
   return (
     <section aria-labelledby="favorite-repos-heading">
@@ -40,8 +49,9 @@ export function FavoriteRepos({ repos }: FavoriteReposProps) {
           description="Marca un repositorio con la estrella desde su header para verlo destacado aquí."
         />
       ) : (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {favorites.map((repo) => (
+          {visibleFavorites.map((repo) => (
             <Card
               key={repo.name}
               className="hover:border-gh-accent/50 transition-colors"
@@ -78,6 +88,26 @@ export function FavoriteRepos({ repos }: FavoriteReposProps) {
             </Card>
           ))}
         </div>
+
+        {canExpand && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 text-xs text-gh-accent hover:bg-gh-canvas-subtle rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gh-accent"
+            aria-expanded={expanded}
+          >
+            {expanded ? (
+              <>
+                Ver menos <ChevronUp className="w-3 h-3" />
+              </>
+            ) : (
+              <>
+                Ver {favorites.length - COLLAPSED_LIMIT} más <ChevronDown className="w-3 h-3" />
+              </>
+            )}
+          </button>
+        )}
+        </>
       )}
     </section>
   );

@@ -19,6 +19,7 @@
 15. [Flujo de Datos y Relaciones entre Componentes](#15-flujo-de-datos-y-relaciones-entre-componentes)
 16. [Rutas de la Aplicacion](#16-rutas-de-la-aplicacion)
 17. [Decisiones Tecnicas](#17-decisiones-tecnicas)
+18. [E3 — Validacion con Usuarios y Mejoras Implementadas](#18-e3--validacion-con-usuarios-y-mejoras-implementadas)
 
 ---
 
@@ -1746,3 +1747,62 @@ El patron antiguo guardaba un `string | null` en `useState` local de cada compon
 3. Radix gestiona el ciclo de vida (open → auto-close 5 s → animate-out)
 
 **Por que no Context manual:** Radix `@radix-ui/react-toast` ya implementa `aria-live="polite"`, el swipe gesture, y la logica de auto-dismiss. Construirlo desde cero seria duplicar trabajo sin ganar nada.
+
+---
+
+## 18. E3 — Validacion con Usuarios y Mejoras Implementadas
+
+Esta seccion documenta el cierre del ciclo iterativo (E3): se puso el prototipo de E2 frente a usuarios reales, se sintetizaron los hallazgos y se implementaron mejoras justificadas con teoria del curso. Sirve como insumo directo para el informe (ssecciones "Resultados", "Plan de mejora", "Mejoras implementadas" y "Valor entregado").
+
+### 18.1 Diseno del user testing
+
+- **Participantes:** 3 usuarios del publico objetivo (estudiantes de computacion / desarrolladores junior), externos al equipo.
+- **Metodo:** testing moderado de tareas + think-aloud + registro de exito/friccion por tarea.
+- **Instrumento complementario:** cuestionario SUS. Resultado **SUS = 82.5**, por encima del benchmark de la industria (68) → usabilidad percibida "buena/excelente".
+- **Tareas:** (1) analizar la landing, (2) cambiar la visibilidad de un repo, (3) descargar una carpeta, (4) interpretar una pull request y su progreso de revision, (5) crear un token de acceso.
+
+### 18.2 Dolor y ganancia validados (conexion con la propuesta de valor de E1)
+
+- **Dolor (pain) que el proyecto resuelve:** en GitHub, las acciones frecuentes del desarrollador estan enterradas (visibilidad en *Danger Zone*, tokens a 3 niveles de profundidad) y la informacion de una PR asume que ya internalizaste la sintaxis de git. Los 3 usuarios confirmaron que nuestra version es "menos engorrosa" y que encuentran las acciones "de inmediato".
+- **Ganancia (gain) que el proyecto entrega:** funcionalidades que GitHub no tiene y que los usuarios valoraron espontaneamente, en especial la **descarga por carpeta** ("algo que realmente le hace falta a GitHub") y el **progreso de revision visible para todos**.
+
+### 18.3 Hallazgos priorizados -> mejora -> justificacion teorica
+
+| # | Hallazgo (evidencia) | Severidad | Mejora implementada | Principio de diseno |
+|---|---|---|---|---|
+| C1 | El gate de tokens/SSH era una trampa: entrando directo a la URL no se podia cerrar ni volver (Mananinane) | Critico | `SecurityGate` pasa de modal bloqueante a **contenido inline** con salida "Volver a Settings" | Control y libertad del usuario; evitar callejones sin salida (Nielsen #3) |
+| C2 | "Your repositories" llevaba a un repo, no a una lista (Salinas) | Critico | Nueva vista **`/[user]`** con todos los repos, filtro y badges | Correspondencia sistema-mundo real; consistencia de navegacion |
+| C3 | No se podia crear una PR (sin boton en el repo, branch sin accion, quick-action sin selector de repo) (Mananinane) | Critico | **`NewPullRequestModal`** reutilizable con selector de repo + dropdowns de rama; boton en el tab del repo; dropdown de rama funcional | Completitud del flujo; visibilidad de opciones |
+| H1 | La barra de review estaba siempre verde (Felipe) | Alto | Color **agregado**: rojo si piden cambios, amarillo si falta, verde si todos aprueban + pill de estado | Visibilidad del estado del sistema; mapeo color->significado |
+| H2 | Los puntos de "File coverage" no se entendian (Felipe) | Alto | **Leyenda** "revisado / sin revisar" + aclaracion de los avatares | Reconocer en vez de recordar |
+| H3 | Los avatares de revisores se amontonaban (Salinas) | Alto | Maximo 3 avatares + burbuja **"+N"** | Control de densidad; consistencia |
+| H4 | La descarga solo aparecia en hover y solo en carpetas (los 3 usuarios) | Alto | Boton **siempre visible**, en archivos y carpetas, en **columna dedicada** | Affordance/descubribilidad; consistencia |
+| H5 | Faltaba etiqueta de rol en los comentarios (Salinas) | Alto | Badge **Author / Reviewer** en cada comentario de la conversacion | Identidad y jerarquia de la informacion |
+| H6 | Cambiar visibilidad deberia pedir un paso extra (Salinas) | Alto | **Type-to-confirm**: escribir el nombre del repo para habilitar el cambio | Prevencion de errores en acciones sensibles |
+| M1 | "Settings" se repetia en quick actions, navbar y menu (Felipe, Mananinane) | Medio | Se quita de Quick Actions; se agrega "New Issue" | Minimalismo; reducir redundancia |
+| M2 | Favoritos y lista lateral se acumulaban infinito (Salinas) | Medio | **"Ver mas"** en favoritos y sidebar (limite colapsado) | Progressive disclosure; control de densidad |
+| M3 | "Recent Pull Requests" quedaba escondido al fondo (Salinas, Felipe) | Medio | Reordenamiento: Recent PRs sube por sobre Most Used | Jerarquia visual; importancia -> posicion |
+| M4 | El separador del sidebar izquierdo se veia mal (Salinas) | Medio | Perfil con tratamiento de tarjeta y separadores suavizados | Estetica y diseno minimalista |
+
+### 18.4 Detalle antes/despues de las mejoras clave
+
+- **C1 (gate de seguridad):** *Antes* — overlay `fixed inset-0` con preview borroso; sin password el usuario quedaba atrapado. *Despues* — tarjeta inline en el flujo de la pagina con enlace "Volver a Settings"; el sidebar de Settings sigue accesible. (`src/components/ui/SecurityGate.tsx`)
+- **C3 (crear PR):** *Antes* — el quick-action de PR pedia escribir ramas a ciegas y no permitia elegir repo; dentro del repo no habia entrada. *Despues* — modal unico con selector de repositorio y **dropdowns** de rama poblados desde `src/data/branches.ts`, usado tanto desde la landing como desde el tab "Pull Requests" del repo. (`src/components/pr/NewPullRequestModal.tsx`)
+- **H1 (color de review):** *Antes* — barra siempre verde, independiente del estado real. *Despues* — funcion `getAggregateState` que decide rojo/amarillo/verde y un *pill* textual con `aria-label`. Para que sea **demostrable**, la PR #1 quedo con un reviewer en "changes requested" (barra roja) y un archivo con 4 revisores (burbuja "+1"). (`src/components/pr/ReviewProgressBar.tsx`)
+- **H4 (descarga):** *Antes* — `opacity-0 group-hover:opacity-100`, solo en carpetas. *Despues* — boton visible permanente en una columna a la derecha, tambien para archivos. (`src/components/repo/FileBrowser.tsx`)
+
+### 18.5 Trabajo futuro (priorizado pero no implementado en E3)
+
+- **Etiqueta reviewer/author tambien en el diff** (no solo en la conversacion).
+- **Colapsar/recordar** la rama elegida en el `FileBrowser` entre navegaciones (hoy es estado local efimero).
+- **Recuperacion de password real** en el gate (hoy el enlace "Forgot your password?" es decorativo, coherente con el alcance mock).
+- **Buscador global** que tambien indexe issues y PRs (hoy solo repos).
+
+### 18.6 Archivos tocados en E3
+
+| Cambio | Archivos |
+|---|---|
+| Datos | `src/data/branches.ts` (nuevo), `src/data/users.ts`, `src/data/pullRequests.ts` |
+| Criticos | `src/components/ui/SecurityGate.tsx`, `src/app/[user]/page.tsx` (nuevo), `src/components/pr/NewPullRequestModal.tsx` (nuevo), `src/components/home/QuickActions.tsx`, `src/app/[user]/[repo]/page.tsx`, `src/components/repo/FileBrowser.tsx`, `src/components/layout/Navbar.tsx` |
+| UI/UX | `src/components/pr/ReviewProgressBar.tsx`, `src/components/pr/PRTimeline.tsx`, `src/app/[user]/[repo]/pull/[id]/page.tsx`, `src/components/repo/RepoHeader.tsx` |
+| Landing | `src/components/home/FavoriteRepos.tsx`, `src/components/home/SidebarRepoList.tsx` (nuevo), `src/app/page.tsx` |

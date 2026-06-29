@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { User, Key, Shield, Lock, Info, ShieldCheck } from "lucide-react";
+import { User, Key, Shield, Lock, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -125,26 +125,6 @@ export function SettingsSidebar() {
           </div>
         )}
 
-        {/* Reframe callout: justifies WHY tokens/SSH are at top level */}
-        <aside
-          className="mt-6 mx-3 p-3 bg-gh-accent/10 border border-gh-accent/20 rounded-md"
-          aria-label="UX rationale"
-        >
-          <div className="flex items-start gap-2">
-            <Info className="w-3.5 h-3.5 text-gh-accent shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs text-gh-accent font-semibold mb-1">
-                Frecuencia sobre completitud
-              </p>
-              <p className="text-xs text-gh-fg-muted leading-relaxed">
-                Promovimos <strong className="text-gh-fg">Access Tokens</strong> y{" "}
-                <strong className="text-gh-fg">SSH Keys</strong> al primer nivel porque son acciones
-                semanales para un desarrollador. En GitHub clásico viven dentro de
-                {" "}<code className="text-gh-fg-muted">Settings → Developer settings</code>.
-              </p>
-            </div>
-          </div>
-        </aside>
       </nav>
 
       <Modal isOpen={pendingHref !== null} onClose={handleCancel} title="Confirm access">

@@ -1,14 +1,20 @@
-// Client component: useState para abrir/cerrar modales de "New Repo" y
-// "New PR"; los handlers de formulario y timeouts requieren browser.
+// Client component: useState para abrir/cerrar el modal de "New Repo" y delega
+// la creación de PR en NewPullRequestModal (reutilizable, con selector de repo).
+//
+// HALLAZGO E3 (Felipe + Mananinane): "Settings" se repetía en quick actions, navbar
+// y menú de usuario → redundante. Lo quitamos de aquí y agregamos "New Issue", una
+// entrada de creación que faltaba (alinea las 3 acciones de creación + Explore).
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, GitPullRequest, BookOpen, Settings, Loader2, Check } from "lucide-react";
+import { Plus, GitPullRequest, CircleDot, Compass, Loader2, Check } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { NewPullRequestModal } from "@/components/pr/NewPullRequestModal";
+import { currentUser } from "@/data/users";
 
-type ActionKey = "new-repo" | "new-pr" | "explore" | "settings";
+type ActionKey = "new-repo" | "new-pr" | "new-issue" | "explore";
 
 const actions: Array<{
   key: ActionKey;
@@ -19,8 +25,14 @@ const actions: Array<{
 }> = [
   { key: "new-repo", icon: Plus, label: "New Repository", color: "text-gh-success" },
   { key: "new-pr", icon: GitPullRequest, label: "New Pull Request", color: "text-gh-done" },
-  { key: "explore", icon: BookOpen, label: "Explore Repos", color: "text-gh-accent", href: "/explore" },
-  { key: "settings", icon: Settings, label: "Settings", color: "text-gh-fg-muted", href: "/settings" },
+  {
+    key: "new-issue",
+    icon: CircleDot,
+    label: "New Issue",
+    color: "text-gh-warning",
+    href: `/${currentUser.username}/proyecto-interfaces/issues`,
+  },
+  { key: "explore", icon: Compass, label: "Explore Repos", color: "text-gh-accent", href: "/explore" },
 ];
 
 export function QuickActions() {
@@ -194,132 +206,6 @@ function NewRepoModal({ open, onClose }: { open: boolean; onClose: () => void })
                 </>
               ) : (
                 "Create repository"
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-function NewPullRequestModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [title, setTitle] = useState("");
-  const [base, setBase] = useState("main");
-  const [head, setHead] = useState("");
-  const [phase, setPhase] = useState<"form" | "submitting" | "done">("form");
-  const [error, setError] = useState<string | null>(null);
-
-  function reset() {
-    setTitle("");
-    setBase("main");
-    setHead("");
-    setPhase("form");
-    setError(null);
-  }
-
-  function handleClose() {
-    onClose();
-    setTimeout(reset, 200);
-  }
-
-  async function handleSubmit() {
-    if (!title.trim()) {
-      setError("El título es obligatorio");
-      return;
-    }
-    if (!head.trim()) {
-      setError("Debes indicar la rama de origen");
-      return;
-    }
-    if (head === base) {
-      setError("La rama de origen y la rama destino no pueden ser la misma");
-      return;
-    }
-    setError(null);
-    setPhase("submitting");
-    await new Promise((r) => setTimeout(r, 700));
-    setPhase("done");
-    setTimeout(handleClose, 1200);
-  }
-
-  return (
-    <Modal isOpen={open} onClose={handleClose} title="Open new pull request">
-      {phase === "done" ? (
-        <SuccessState message={`Pull request "${title}" abierto (mock).`} />
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm bg-gh-canvas border border-gh-border rounded-md p-3">
-            <span className="text-gh-fg-muted">Merging from</span>
-            <code className="text-gh-accent">{head || "<branch>"}</code>
-            <span className="text-gh-fg-muted">into</span>
-            <code className="text-gh-success">{base}</code>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="pr-base" className="block text-sm text-gh-fg mb-1.5">
-                Base branch
-              </label>
-              <input
-                id="pr-base"
-                type="text"
-                value={base}
-                onChange={(e) => setBase(e.target.value)}
-                disabled={phase === "submitting"}
-                className="w-full bg-gh-canvas border border-gh-border rounded-md px-3 py-2 text-sm text-gh-fg focus:outline-none focus:ring-2 focus:ring-gh-accent focus:border-gh-accent disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label htmlFor="pr-head" className="block text-sm text-gh-fg mb-1.5">
-                Compare branch <span className="text-gh-danger">*</span>
-              </label>
-              <input
-                id="pr-head"
-                type="text"
-                value={head}
-                onChange={(e) => setHead(e.target.value)}
-                placeholder="feature/my-branch"
-                disabled={phase === "submitting"}
-                className="w-full bg-gh-canvas border border-gh-border rounded-md px-3 py-2 text-sm text-gh-fg placeholder:text-gh-fg-muted focus:outline-none focus:ring-2 focus:ring-gh-accent focus:border-gh-accent disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="pr-title" className="block text-sm text-gh-fg mb-1.5">
-              Pull request title <span className="text-gh-danger">*</span>
-            </label>
-            <input
-              id="pr-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Add new feature"
-              autoFocus
-              disabled={phase === "submitting"}
-              className="w-full bg-gh-canvas border border-gh-border rounded-md px-3 py-2 text-sm text-gh-fg placeholder:text-gh-fg-muted focus:outline-none focus:ring-2 focus:ring-gh-accent focus:border-gh-accent disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-          </div>
-
-          {error && (
-            <div className="text-xs text-gh-danger bg-gh-danger/10 border border-gh-danger/30 rounded-md px-3 py-2">
-              {error}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-gh-border">
-            <Button onClick={handleClose} disabled={phase === "submitting"}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleSubmit} disabled={phase === "submitting"}>
-              {phase === "submitting" ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Opening...
-                </>
-              ) : (
-                "Create pull request"
               )}
             </Button>
           </div>

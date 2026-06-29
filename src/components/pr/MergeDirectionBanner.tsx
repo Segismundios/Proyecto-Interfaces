@@ -1,4 +1,4 @@
-import { MoveRight, GitBranch, Info } from "lucide-react";
+import { MoveRight, GitBranch } from "lucide-react";
 
 interface MergeDirectionBannerProps {
   headBranch: string;
@@ -52,17 +52,6 @@ export function MergeDirectionBanner({ headBranch, baseBranch, status }: MergeDi
           <GitBranch className="w-4 h-4 text-gh-success" />
           <span className="text-sm font-mono font-semibold text-gh-success">{baseBranch}</span>
         </div>
-      </div>
-
-      {/* Reframe callout */}
-      <div className="mt-4 pt-3 border-t border-gh-border/50 flex items-start gap-2 text-xs text-gh-fg-muted">
-        <Info className="w-3.5 h-3.5 text-gh-accent shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <span className="font-semibold text-gh-accent">Modelo mental explícito:</span>{" "}
-          mostramos la dirección del merge como una flecha visual con etiquetas &quot;Desde/Hacia&quot;.
-          GitHub clásico sólo lo dice en texto (<code>{headBranch}:{baseBranch}</code>), lo que
-          asume que ya internalizaste la sintaxis de git.
-        </p>
       </div>
     </section>
   );

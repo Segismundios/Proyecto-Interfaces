@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { Repository } from "@/types";
-import { Star, GitFork, Eye, EyeOff, Lock, Globe, BookOpen, Info } from "lucide-react";
+import { Star, GitFork, Eye, EyeOff, Lock, Globe, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
@@ -20,6 +20,10 @@ interface RepoHeaderProps {
 export function RepoHeader({ repo }: RepoHeaderProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // HALLAZGO E3 (Salinas): pidió un paso extra de confirmación al cambiar la
+  // visibilidad. Type-to-confirm: hay que escribir el nombre del repo para
+  // habilitar el botón. Principio: prevención de errores en acciones sensibles.
+  const [confirmText, setConfirmText] = useState("");
   const { isFavorite, toggleFavorite } = useFavorites();
   const { getVisibility, toggleVisibility: ctxToggle } = useVisibility();
   const { forks, watches, toggleFork, toggleWatch } = useUserData();
@@ -34,17 +38,25 @@ export function RepoHeader({ repo }: RepoHeaderProps) {
   const forkCount = repo.forks + (isForked ? 1 : 0);
   const starCount = repo.stars - (repo.isFavorite ? 1 : 0) + (starred ? 1 : 0);
 
+  function closeConfirm() {
+    setShowConfirm(false);
+    setConfirmText("");
+  }
+
   async function confirmToggleVisibility() {
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 500));
     ctxToggle(repo.owner, repo.name);
     setSubmitting(false);
     setShowConfirm(false);
+    setConfirmText("");
     toast({
       title: `Repositorio ahora es ${visibility === "public" ? "privado" : "público"}`,
       variant: "success",
     });
   }
+
+  const confirmMatches = confirmText.trim() === repo.name;
 
   function handleFork() {
     toggleFork(repoKey);
@@ -149,26 +161,11 @@ export function RepoHeader({ repo }: RepoHeaderProps) {
         </div>
 
         <p className="text-sm text-gh-fg-muted">{repo.description}</p>
-
-        {/* Callout de reframe: justifica la decisión de diseño (Mejora 3) */}
-        <aside
-          aria-label="UX rationale"
-          className="mt-3 flex items-start gap-2 p-2.5 bg-gh-accent/10 border border-gh-accent/20 rounded text-xs text-gh-fg-muted"
-        >
-          <Info className="w-3.5 h-3.5 text-gh-accent shrink-0 mt-0.5" />
-          <p className="leading-relaxed">
-            <span className="font-semibold text-gh-accent">Frecuencia sobre completitud:</span>{" "}
-            el toggle de visibilidad vive aquí, junto a Star y Fork, porque es una decisión que el
-            usuario revisa con frecuencia. GitHub clásico lo entierra en{" "}
-            <code className="text-gh-fg">Settings → Danger Zone</code>, asumiendo que cambiar
-            visibilidad es siempre &quot;peligroso&quot;.
-          </p>
-        </aside>
       </header>
 
       <Modal
         isOpen={showConfirm}
-        onClose={() => !submitting && setShowConfirm(false)}
+        onClose={() => !submitting && closeConfirm()}
         title="Cambiar visibilidad del repositorio"
       >
         <p className="text-sm text-gh-fg mb-4">
@@ -178,14 +175,33 @@ export function RepoHeader({ repo }: RepoHeaderProps) {
             ? " Dejará de ser visible para el público general."
             : " Será visible para cualquier persona en internet."}
         </p>
+
+        {/* Type-to-confirm: fricción intencional para una acción consecuente */}
+        <label htmlFor="visibility-confirm" className="block text-sm text-gh-fg-muted mb-1.5">
+          Para confirmar, escribe{" "}
+          <code className="text-gh-fg bg-gh-canvas px-1 py-0.5 rounded">{repo.name}</code>:
+        </label>
+        <input
+          id="visibility-confirm"
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && confirmMatches && !submitting && confirmToggleVisibility()}
+          placeholder={repo.name}
+          autoComplete="off"
+          autoFocus
+          disabled={submitting}
+          className="w-full bg-gh-canvas border border-gh-border rounded-md px-3 py-2 text-sm text-gh-fg placeholder:text-gh-fg-muted focus:outline-none focus:ring-2 focus:ring-gh-accent focus:border-gh-accent disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+        />
+
         <div className="flex justify-end gap-2">
-          <Button onClick={() => setShowConfirm(false)} disabled={submitting}>
+          <Button onClick={closeConfirm} disabled={submitting}>
             Cancelar
           </Button>
           <Button
             variant={visibility === "public" ? "danger" : "primary"}
             onClick={confirmToggleVisibility}
-            disabled={submitting}
+            disabled={submitting || !confirmMatches}
           >
             {submitting
               ? "Aplicando…"

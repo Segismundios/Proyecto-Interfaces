@@ -26,4 +26,16 @@ export const collaborators: User[] = [
     avatarUrl: "https://ui-avatars.com/api/?name=Ana+Martinez&background=f85149&color=fff&size=128",
     bio: "DevOps & Cloud",
   },
+  {
+    username: "diego-soto",
+    displayName: "Diego Soto",
+    avatarUrl: "https://ui-avatars.com/api/?name=Diego+Soto&background=db6d28&color=fff&size=128",
+    bio: "Frontend & accesibilidad",
+  },
+  {
+    username: "lucia-fernandez",
+    displayName: "Lucia Fernandez",
+    avatarUrl: "https://ui-avatars.com/api/?name=Lucia+Fernandez&background=2da44e&color=fff&size=128",
+    bio: "QA & testing",
+  },
 ];

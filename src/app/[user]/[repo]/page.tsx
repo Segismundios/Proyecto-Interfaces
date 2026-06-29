@@ -9,6 +9,7 @@ import { pullRequests } from "@/data/pullRequests";
 import { RepoHeader } from "@/components/repo/RepoHeader";
 import { FileBrowser } from "@/components/repo/FileBrowser";
 import { ReadmePreview } from "@/components/repo/ReadmePreview";
+import { NewPullRequestModal } from "@/components/pr/NewPullRequestModal";
 import { Tabs } from "@/components/ui/Tabs";
 import { useState } from "react";
 import {
@@ -54,6 +55,7 @@ export default function RepoPage() {
   const repoName = params.repo as string;
   const userName = params.user as string;
   const [activeTab, setActiveTab] = useState("code");
+  const [showNewPR, setShowNewPR] = useState(false);
   const [showNewIssue, setShowNewIssue] = useState(false);
   const [newIssueTitle, setNewIssueTitle] = useState("");
   const [newIssueBody, setNewIssueBody] = useState("");
@@ -132,22 +134,40 @@ export default function RepoPage() {
         {/* ── Code tab ── */}
         {activeTab === "code" && (
           <>
-            <FileBrowser files={files} />
+            <FileBrowser files={files} repoName={repo.name} />
             <ReadmePreview repoName={repo.name} />
           </>
         )}
 
         {/* ── Pull Requests tab ── */}
         {activeTab === "pulls" && (
-          <div className="border border-gh-border rounded-md overflow-hidden">
-            {repoPRs.length === 0 ? (
-              <EmptyState
-                icon={GitPullRequest}
-                title="No hay pull requests"
-                description="Aún no hay pull requests en este repositorio."
-              />
-            ) : (
-              repoPRs.map((pr, i) => (
+          <div>
+            {/* Toolbar: entrada explícita para crear PR dentro del repo (Mananinane) */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-gh-fg-muted">
+                {repoPRs.length} pull request{repoPRs.length !== 1 ? "s" : ""}
+              </span>
+              <Button size="sm" variant="primary" onClick={() => setShowNewPR(true)}>
+                <GitPullRequest className="w-3.5 h-3.5" />
+                New pull request
+              </Button>
+            </div>
+
+            <div className="border border-gh-border rounded-md overflow-hidden">
+              {repoPRs.length === 0 ? (
+                <EmptyState
+                  icon={GitPullRequest}
+                  title="No hay pull requests"
+                  description="Crea la primera pull request de este repositorio."
+                  cta={
+                    <Button size="sm" variant="primary" onClick={() => setShowNewPR(true)}>
+                      <GitPullRequest className="w-3.5 h-3.5" />
+                      New pull request
+                    </Button>
+                  }
+                />
+              ) : (
+                repoPRs.map((pr, i) => (
                 <div
                   key={pr.id}
                   className={`flex items-center justify-between px-4 py-3 hover:bg-gh-canvas-subtle ${
@@ -179,8 +199,9 @@ export default function RepoPage() {
                   </div>
                   <Badge variant={statusVariantMap[pr.status]}>{pr.status}</Badge>
                 </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         )}
 
@@ -384,6 +405,13 @@ export default function RepoPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de crear PR (repo fijo) — entrada que faltaba dentro del repo */}
+      <NewPullRequestModal
+        open={showNewPR}
+        onClose={() => setShowNewPR(false)}
+        lockedRepo={repo.name}
+      />
     </div>
   );
 }

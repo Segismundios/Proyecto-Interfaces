@@ -70,7 +70,7 @@ export function Navbar() {
   // ── Nav links ────────────────────────────────────────────────────────────
   const navLinks = [
     { href: "/", label: "Dashboard" },
-    { href: "/explore", label: "Explore", icon: Compass },
+    { href: "/explore", label: "Explore" },
     { href: `/${currentUser.username}/proyecto-interfaces`, label: "Repository" },
     { href: "/settings", label: "Settings" },
   ];
@@ -304,7 +304,7 @@ export function Navbar() {
                 <p className="text-[11px] text-gh-fg-muted">@{currentUser.username}</p>
               </div>
               <DropdownMenu.Item
-                onSelect={() => router.push(`/${currentUser.username}/proyecto-interfaces`)}
+                onSelect={() => router.push(`/${currentUser.username}`)}
               >
                 <BookOpen className="w-4 h-4" />
                 Your repositories

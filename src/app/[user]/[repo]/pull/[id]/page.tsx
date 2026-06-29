@@ -206,7 +206,7 @@ export default function PullRequestPage() {
                 </div>
 
                 {/* Timeline */}
-                <PRTimeline comments={pr.comments} />
+                <PRTimeline comments={pr.comments} prAuthor={pr.author} reviewers={pr.reviewers} />
 
                 {/* Merge area */}
                 {currentStatus === "open" && (

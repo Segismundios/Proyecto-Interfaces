@@ -42,13 +42,15 @@ export const pullRequests: PullRequest[] = [
       { username: "maria-garcia", status: "approved" },
       { username: "carlos-ruiz", status: "changes_requested" },
       { username: "ana-martinez", status: "pending" },
+      { username: "diego-soto", status: "approved" },
+      { username: "lucia-fernandez", status: "approved" },
     ],
     diffFiles: [
       {
         filename: "src/app/settings/layout.tsx",
         additions: 45,
         deletions: 0,
-        reviewedBy: ["maria-garcia"],
+        reviewedBy: ["maria-garcia", "carlos-ruiz", "diego-soto", "lucia-fernandez"],
         hunks: [
           {
             header: "@@ -0,0 +1,45 @@",

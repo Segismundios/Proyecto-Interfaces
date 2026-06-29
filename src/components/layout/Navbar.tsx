@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Search, Bell, Plus, ChevronDown, Compass, GitPullRequest,
+  Search, Bell, Plus, ChevronDown, GitPullRequest,
   BookOpen, Settings, LogOut, X,
 } from "lucide-react";
 import { currentUser } from "@/data/users";

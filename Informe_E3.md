@@ -1,4 +1,4 @@
-# Entrega 3 — Validación con usuarios y proyecto final
+# Entrega 3: Validación con usuarios y proyecto final
 ### DevHub · Clon de GitHub con mejoras de UX
 
 > **Nota para el equipo:** este documento está listo para exportar a PDF. Reemplaza los campos marcados con `⟦…⟧` (integrantes, enlace de despliegue, capturas) antes de entregar. Para convertir a PDF: abrir en VS Code → "Markdown PDF", o pegar en Google Docs, o `pandoc Informe_E3.md -o Informe_E3.pdf`.
@@ -9,9 +9,9 @@
 
 | | |
 |---|---|
-| **Proyecto** | DevHub — Clon de GitHub con mejoras de UX |
-| **Curso** | IIC2182 — Interfaces y Experiencia de Usuario |
-| **Entrega** | E3 — Validación con usuarios y proyecto final |
+| **Proyecto** | DevHub: Clon de GitHub con mejoras de UX |
+| **Curso** | IIC2182: Interfaces y Experiencia de Usuario |
+| **Entrega** | E3: Validación con usuarios y proyecto final |
 | **Grupo** | ⟦N° / nombre del grupo⟧ |
 | **Integrantes** | ⟦Nombre 1⟧ · ⟦Nombre 2⟧ · ⟦Nombre 3⟧ · ⟦Nombre 4⟧ |
 | **Repositorio** | https://github.com/Segismundios/Proyecto-Interfaces |
@@ -48,9 +48,9 @@ Se reclutaron **3 participantes** representativos del usuario objetivo definido 
 
 | Participante | Perfil | Relación con GitHub |
 |---|---|---|
-| P1 — Felipe | Estudiante de computación, 4° año | Usuario habitual |
-| P2 — "Salinas" | Estudiante de computación | Usuario **experimentado**, acostumbrado a GitHub |
-| P3 — "Mananinane" | Estudiante de computación | Usuario habitual |
+| P1: Felipe | Estudiante de computación, 4° año | Usuario habitual |
+| P2: "Salinas" | Estudiante de computación | Usuario **experimentado**, acostumbrado a GitHub |
+| P3: "Mananinane" | Estudiante de computación | Usuario habitual |
 
 > Se gestionó el consentimiento de los participantes. P3 no autorizó mostrar rostro en la evidencia.
 
@@ -77,17 +77,17 @@ Se reclutaron **3 participantes** representativos del usuario objetivo definido 
 
 ### 4.1 Tasas de éxito por tarea
 
-> Estudio cualitativo con 3 participantes. ✅ éxito · ⚠️ éxito con fricción · ❌ no completable.
+> Estudio cualitativo con 3 participantes. **Éxito** = tarea completada · **Parcial** = completada con fricción · **Falla** = no completable · **n/a** = no evaluada con ese participante.
 
 | Tarea | P1 | P2 | P3 | Observación clave |
 |---|:--:|:--:|:--:|---|
-| T1 Landing | ⚠️ | ⚠️ | ✅ | Útil y mejor que GitHub, pero "Recent PRs" queda escondido y "Settings" se percibe redundante |
-| T2 Visibilidad | ✅ | ✅ | ✅ | "Lo encuentra de inmediato"; más intuitivo que GitHub |
-| T3 Descarga carpeta | ⚠️ | ⚠️ | ⚠️ | Se completa, pero **solo se descubre al pasar el mouse** (hover) |
-| T4 Comprensión de PR | ⚠️ | ✅ | ✅ | Se entiende por la dirección del merge y las fotos; confusión en colores y en los "puntos" de file coverage |
-| T5 Crear token | ✅ | ✅ | ✅ | "Rápido, intuitivo y sin problemas"; mucho menos engorroso que GitHub |
-| T6a Ver "mis repos" | — | ❌ | — | "Your repositories" llevaba a **un** repo, no a la lista |
-| T6b Crear PR | — | — | ❌ | **No existía** la opción de crear PR dentro del repo |
+| T1 Landing | Parcial | Parcial | Éxito | Útil y mejor que GitHub, pero "Recent PRs" queda escondido y "Settings" se percibe redundante |
+| T2 Visibilidad | Éxito | Éxito | Éxito | "Lo encuentra de inmediato"; más intuitivo que GitHub |
+| T3 Descarga carpeta | Parcial | Parcial | Parcial | Se completa, pero **solo se descubre al pasar el mouse** (hover) |
+| T4 Comprensión de PR | Parcial | Éxito | Éxito | Se entiende por la dirección del merge y las fotos; confusión en colores y en los "puntos" de file coverage |
+| T5 Crear token | Éxito | Éxito | Éxito | "Rápido, intuitivo y sin problemas"; mucho menos engorroso que GitHub |
+| T6a Ver "mis repos" | n/a | Falla | n/a | "Your repositories" llevaba a **un** repo, no a la lista |
+| T6b Crear PR | n/a | n/a | Falla | **No existía** la opción de crear PR dentro del repo |
 
 **SUS:** se aplicó el cuestionario; el puntaje registrado fue **82.5** (suma de 33), por encima del benchmark de la industria (**68**) → usabilidad percibida "buena/excelente".
 
@@ -103,23 +103,23 @@ Se reclutaron **3 participantes** representativos del usuario objetivo definido 
 ### 4.3 Fricciones y problemas detectados
 
 **Críticos (callejones sin salida / flujos rotos):**
-- **C1 — Gate de seguridad atrapa al usuario:** "si accedes a `/settings/tokens` o `/settings/ssh-keys` sin verificarte, el modal de verificación no se puede quitar y no puedes volver a `/settings`" (P3). Sugirió que la verificación "apareciera como contenido de la ruta, no como un modal".
-- **C2 — "Your repositories" lleva al lugar equivocado:** "al hacerle click se manda a un repositorio específico en vez de una vista con todos los repositorios" (P2).
-- **C3 — No se puede crear una PR:** "no existía la opción de crear una pull request dentro del repositorio, no se mostraban las branches […] y en la quick action de crear pull request no se podía seleccionar un repositorio" (P3).
+- **C1 · Gate de seguridad atrapa al usuario:** "si accedes a `/settings/tokens` o `/settings/ssh-keys` sin verificarte, el modal de verificación no se puede quitar y no puedes volver a `/settings`" (P3). Sugirió que la verificación "apareciera como contenido de la ruta, no como un modal".
+- **C2 · "Your repositories" lleva al lugar equivocado:** "al hacerle click se manda a un repositorio específico en vez de una vista con todos los repositorios" (P2).
+- **C3 · No se puede crear una PR:** "no existía la opción de crear una pull request dentro del repositorio, no se mostraban las branches […] y en la quick action de crear pull request no se podía seleccionar un repositorio" (P3).
 
 **De usabilidad (UI/UX):**
-- **H1 — Color de la barra de review:** "La barra verde […] debería estar roja cuando alguien pide cambios y verde solo cuando esté aprobado por todos. Si no está completa, debería ser amarilla" (P1).
-- **H2 — "Puntos" de file coverage confusos:** "No entiende a simple vista los puntos verdes en file coverage; no sabe si indican revisión o aprobación" (P1).
-- **H3 — Revisores amontonados:** "si hubieran muchos revisores […] los iconos de usuario se acumularían demasiado. La solución es dejar un número fijo como 3 y luego un icono +N" (P2).
-- **H4 — Descarga solo en hover e inconsistente:** "el icono de descarga debería estar fijo, ya que no se hubiera dado cuenta de la funcionalidad hasta pasar el mouse" (P2); "encontró raro que el icono solo apareciera en los directorios y no en los archivos" (P3).
-- **H5 — Falta rol en los comentarios:** "agregaría una etiqueta de reviewer/autor al comentario de la conversación de un usuario" (P2).
-- **H6 — Cambio de visibilidad sin fricción:** "al cambiar el repositorio público a privado se le añada un paso extra de seguridad al modal, como escribir literalmente una frase de confirmación" (P2).
+- **H1 · Color de la barra de review:** "La barra verde […] debería estar roja cuando alguien pide cambios y verde solo cuando esté aprobado por todos. Si no está completa, debería ser amarilla" (P1).
+- **H2 · "Puntos" de file coverage confusos:** "No entiende a simple vista los puntos verdes en file coverage; no sabe si indican revisión o aprobación" (P1).
+- **H3 · Revisores amontonados:** "si hubieran muchos revisores […] los iconos de usuario se acumularían demasiado. La solución es dejar un número fijo como 3 y luego un icono +N" (P2).
+- **H4 · Descarga solo en hover e inconsistente:** "el icono de descarga debería estar fijo, ya que no se hubiera dado cuenta de la funcionalidad hasta pasar el mouse" (P2); "encontró raro que el icono solo apareciera en los directorios y no en los archivos" (P3).
+- **H5 · Falta rol en los comentarios:** "agregaría una etiqueta de reviewer/autor al comentario de la conversación de un usuario" (P2).
+- **H6 · Cambio de visibilidad sin fricción:** "al cambiar el repositorio público a privado se le añada un paso extra de seguridad al modal, como escribir literalmente una frase de confirmación" (P2).
 
 **De presentación (landing):**
-- **M1 — "Settings" redundante:** aparecía en quick actions, navbar y menú de usuario (P1 y P3).
-- **M2 — Acumulación infinita:** "los repos favoritos se pudieran colapsar o mostrar un número acotado para que no se fueran acumulando infinitamente hacia abajo" (P2).
-- **M3 — "Recent PRs" escondido:** "no lo vio en un inicio porque está muy escondido hacia abajo" (P2).
-- **M4 — Estética del sidebar:** "la línea que separa el perfil de los repos no le convence mucho estéticamente" (P2).
+- **M1 · "Settings" redundante:** aparecía en quick actions, navbar y menú de usuario (P1 y P3).
+- **M2 · Acumulación infinita:** "los repos favoritos se pudieran colapsar o mostrar un número acotado para que no se fueran acumulando infinitamente hacia abajo" (P2).
+- **M3 · "Recent PRs" escondido:** "no lo vio en un inicio porque está muy escondido hacia abajo" (P2).
+- **M4 · Estética del sidebar:** "la línea que separa el perfil de los repos no le convence mucho estéticamente" (P2).
 
 ---
 
@@ -130,7 +130,7 @@ Problemas priorizados por **severidad × impacto en el usuario**, con la mejora 
 | # | Problema | Sev. | Mejora propuesta | Justificación teórica |
 |---|---|:--:|---|---|
 | C1 | Gate = callejón sin salida | Crítica | Verificación **inline** con salida "Volver a Settings" | Control y libertad del usuario; salidas de emergencia (Nielsen #3) |
-| C2 | "Your repositories" → 1 repo | Crítica | Vista **`/[user]`** con todos los repos + filtro | Correspondencia sistema–mundo real; consistencia |
+| C2 | "Your repositories" → 1 repo | Crítica | Vista **`/[user]`** con todos los repos + filtro | Correspondencia entre el sistema y el mundo real; consistencia |
 | C3 | No se puede crear PR | Crítica | Modal de PR con **selector de repo + ramas**; entrada en el repo | Completitud del flujo; visibilidad de las opciones |
 | H1 | Barra siempre verde | Alta | Color **agregado** (rojo/amarillo/verde) + etiqueta de estado | Visibilidad del estado del sistema; mapeo color→significado |
 | H2 | Puntos confusos | Alta | **Leyenda** explícita | Reconocer en vez de recordar |
@@ -143,7 +143,7 @@ Problemas priorizados por **severidad × impacto en el usuario**, con la mejora 
 | M3 | "Recent PRs" escondido | Media | Reordenar: subir Recent PRs | Jerarquía visual (importancia→posición) |
 | M4 | Estética del sidebar | Media | Perfil como tarjeta; separadores suaves | Estética y diseño minimalista |
 
-**Implementadas en E3:** todas las anteriores (C1–C3, H1–H6, M1–M4).
+**Implementadas en E3:** todas las anteriores (C1 a C3, H1 a H6, M1 a M4).
 **Trabajo futuro:** ver sección 8.
 
 ---
@@ -152,11 +152,11 @@ Problemas priorizados por **severidad × impacto en el usuario**, con la mejora 
 
 > Las capturas marcadas con `⟦Captura⟧` deben tomarse del despliegue final. Se indica exactamente qué mostrar.
 
-### 6.1 Críticas — Completitud del flujo
+### 6.1 Críticas: Completitud del flujo
 
 **C1 · Gate de seguridad inline**
 Antes: overlay modal bloqueante con preview borroso; sin contraseña el usuario quedaba atrapado, sin forma de volver a `/settings`.
-Después: la verificación es contenido de la ruta, con enlace **"← Volver a Settings"**; el sidebar de Settings permanece accesible.
+Después: la verificación es contenido de la ruta, con enlace **"Volver a Settings"**; el sidebar de Settings permanece accesible.
 Archivo: `src/components/ui/SecurityGate.tsx`.
 ⟦Captura: `/settings/tokens` sin verificar, mostrando la tarjeta inline y el enlace de salida⟧
 
@@ -172,16 +172,16 @@ Después: componente reutilizable `NewPullRequestModal` con **selector de reposi
 Archivos: `src/components/pr/NewPullRequestModal.tsx` (nuevo), `src/data/branches.ts` (nuevo), `src/components/home/QuickActions.tsx`, `src/app/[user]/[repo]/page.tsx`, `src/components/repo/FileBrowser.tsx`.
 ⟦Captura: modal de PR con repo y ramas seleccionables⟧
 
-### 6.2 Altas — Calidad de UI/UX
+### 6.2 Altas: Calidad de UI/UX
 
-**H1 · Color semántico de la barra de review** — rojo si algún revisor pide cambios, verde solo si todos aprueban, amarillo si falta alguien, con una *pill* de estado textual. `src/components/pr/ReviewProgressBar.tsx`. ⟦Captura: PR #1 (barra roja "Changes requested") vs PR #2 (verde "Approved by all")⟧
-**H2 · Leyenda en file coverage** — "revisado / sin revisar" + aclaración de los avatares. ⟦Captura: leyenda visible⟧
-**H3 · Overflow "+N"** — máximo 3 avatares por archivo y burbuja "+N" (demostrable en la PR #1, con un archivo revisado por 4 personas). ⟦Captura: archivo con "+1"⟧
-**H4 · Descarga fija, en archivos y carpetas** — botón siempre visible en una columna dedicada a la derecha. `src/components/repo/FileBrowser.tsx`. ⟦Captura: file browser con iconos de descarga fijos en filas de archivo y de carpeta⟧
-**H5 · Etiquetas Author/Reviewer** — badge de rol en cada comentario de la conversación. `src/components/pr/PRTimeline.tsx`. ⟦Captura: conversación con badges⟧
-**H6 · Type-to-confirm de visibilidad** — el botón se habilita solo al escribir el nombre del repo. `src/components/repo/RepoHeader.tsx`. ⟦Captura: modal con el input de confirmación⟧
+**H1 · Color semántico de la barra de review**: rojo si algún revisor pide cambios, verde solo si todos aprueban, amarillo si falta alguien, con una *pill* de estado textual. `src/components/pr/ReviewProgressBar.tsx`. ⟦Captura: PR #1 (barra roja "Changes requested") vs PR #2 (verde "Approved by all")⟧
+**H2 · Leyenda en file coverage**: "revisado / sin revisar" + aclaración de los avatares. ⟦Captura: leyenda visible⟧
+**H3 · Overflow "+N"**: máximo 3 avatares por archivo y burbuja "+N" (demostrable en la PR #1, con un archivo revisado por 4 personas). ⟦Captura: archivo con "+1"⟧
+**H4 · Descarga fija, en archivos y carpetas**: botón siempre visible en una columna dedicada a la derecha. `src/components/repo/FileBrowser.tsx`. ⟦Captura: file browser con iconos de descarga fijos en filas de archivo y de carpeta⟧
+**H5 · Etiquetas Author/Reviewer**: badge de rol en cada comentario de la conversación. `src/components/pr/PRTimeline.tsx`. ⟦Captura: conversación con badges⟧
+**H6 · Type-to-confirm de visibilidad**: el botón se habilita solo al escribir el nombre del repo. `src/components/repo/RepoHeader.tsx`. ⟦Captura: modal con el input de confirmación⟧
 
-### 6.3 Medias — Presentación (landing)
+### 6.3 Medias: Presentación (landing)
 
 **M1** Quick Actions sin "Settings", con "New Issue" · **M2** "Ver más" en favoritos y sidebar · **M3** Recent PRs reubicado por encima de Most Used · **M4** perfil con tratamiento de tarjeta y separadores suavizados.
 Archivos: `src/components/home/QuickActions.tsx`, `src/components/home/FavoriteRepos.tsx`, `src/components/home/SidebarRepoList.tsx`, `src/app/page.tsx`.
@@ -193,12 +193,12 @@ Archivos: `src/components/home/QuickActions.tsx`, `src/components/home/FavoriteR
 
 El informe deja explícito cómo DevHub resuelve al menos un **dolor** y entrega al menos una **ganancia**, conectados con la propuesta de valor de E1 y con la evidencia del testing.
 
-### Dolor resuelto (pain) — "las acciones frecuentes están enterradas"
+### Dolor resuelto (pain): "las acciones frecuentes están enterradas"
 En E1 identificamos que GitHub esconde acciones cotidianas (visibilidad en *Danger Zone*, tokens a 3 niveles). DevHub las promueve a primer plano: toggle de visibilidad en el header (con confirmación segura) y tokens/SSH como ítems de primer nivel.
 **Evidencia del testing:** los 3 participantes completaron T2 y T5 sin fricción; "lo encuentra de inmediato" (P1), "rápido, intuitivo y sin problemas […] mucho menos engorroso que en GitHub" (P2/P3). El SUS de 82.5 (> 68) respalda la percepción global.
 
-### Ganancia entregada (gain) — "descarga granular del código"
-La propuesta de valor de E1 incluía dar **control granular** sobre el código. DevHub permite descargar una carpeta —y, tras el testing, también un archivo— directamente desde el explorador.
+### Ganancia entregada (gain): "descarga granular del código"
+La propuesta de valor de E1 incluía dar **control granular** sobre el código. DevHub permite descargar una carpeta (y, tras el testing, también un archivo) directamente desde el explorador.
 **Evidencia del testing:** valorada espontáneamente por los 3; "una de las mejores features […] algo que realmente le hace falta a GitHub" (P3). El testing además reveló que la descarga **no se descubría** (solo en hover): la corrección (botón fijo) convierte una ganancia *potencial* en una ganancia *efectiva*.
 
 ---
@@ -222,11 +222,11 @@ La propuesta de valor de E1 incluía dar **control granular** sobre el código. 
 
 ## 9. Anexos
 
-- **Anexo A — Guion de tareas:** sección 3.3 de este informe.
-- **Anexo B — Instrumento SUS:** ⟦adjuntar las 10 afirmaciones del SUS y las respuestas; cálculo: suma 33 → 82.5⟧.
-- **Anexo C — Registros del testing:** ⟦notas/observaciones por participante; transcripción en `Entrevistas E3.docx`⟧.
-- **Anexo D — Evidencia:** ⟦capturas de la sesión, con consentimiento; P3 sin rostro⟧.
-- **Anexo E — Mapa técnico de cambios:** ver `DOCUMENTACION.md §18` (hallazgo → mejora → archivos).
+- **Anexo A · Guion de tareas:** sección 3.3 de este informe.
+- **Anexo B · Instrumento SUS:** ⟦adjuntar las 10 afirmaciones del SUS y las respuestas; cálculo: suma 33 → 82.5⟧.
+- **Anexo C · Registros del testing:** ⟦notas/observaciones por participante; transcripción en `Entrevistas E3.docx`⟧.
+- **Anexo D · Evidencia:** ⟦capturas de la sesión, con consentimiento; P3 sin rostro⟧.
+- **Anexo E · Mapa técnico de cambios:** ver `DOCUMENTACION.md §18` (hallazgo → mejora → archivos).
 
 ### Despliegue e instrucciones de ejecución local
 ```bash

@@ -176,7 +176,6 @@ export function Navbar() {
                     : "text-gh-fg hover:text-white hover:bg-gh-btn-bg/50"
                 }`}
               >
-                {link.icon && <link.icon className="w-3.5 h-3.5" />}
                 {link.label}
               </Link>
             );
